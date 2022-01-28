@@ -1,7 +1,11 @@
 module BlindMotionCorrectionMRI
 
-using LinearAlgebra, AbstractLinearOperators
+using LinearAlgebra, AbstractLinearOperators, FastSolversForWeightedTV, UtilitiesForMRI, Flux, ImageQualityIndexes
+import Flux.Optimise: update!
 
-# include("./abstract_types.jl")
+const RealOrComplex{T<:Real} = Union{T,Complex{T}}
+
+include("./image_reconstruction.jl")
+include("./utils.jl")
 
 end
