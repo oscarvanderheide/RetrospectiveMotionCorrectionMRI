@@ -26,16 +26,45 @@ Fθ = F(θ)
 # Data
 d = Fθ*u_true
 
-# Optimization options
-L = spectral_radius(Fθ'*Fθ, randn(ComplexF32, n); niter=20)
-opt = FISTA_reconstruction_options(prox; niter=10, L=L, Nesterov=true, verbose=true)
-
 # Approximated solution
 u_approx = nfft_linop(X, K; tol=1f-5)'*d
+println("Approx. sol: SSIM = ", ssim(u_approx, u_true))
+println("             PSNR = ", psnr(u_approx, u_true))
+
+# ## FISTA
+
+# # Optimization options
+# L = spectral_radius(Fθ'*Fθ, randn(ComplexF32, n); niter=20)
+# opt = FISTA_reconstruction_options(prox; niter=10, L=L, Nesterov=true, verbose=true)
+
+# # Solution
+# u_sol, fval = FISTA_reconstruction(Fθ, d, opt)
+# println("FISTA sol: SSIM = ", ssim(u_sol, u_true))
+# println("           PSNR = ", psnr(u_sol, u_true))
+
+## Splitting (regular)
+
+# Optimization options
+L = spectral_radius(Fθ'*Fθ, randn(ComplexF32, n); niter=20)
+λ = 0.01f0*sqrt(L)
+steplength = 1f0/(L+λ^2)
+u_ref = zeros(ComplexF32, n)
+opt = splitreg_reconstruction_options(; niter=10, steplength=steplength, λ=λ, u_ref=u_ref, verbose=true)
 
 # Solution
-u_sol, fval = FISTA_reconstruction(Fθ, d; opt=opt)
-ssim(u_sol, u_true)
-psnr(u_sol, u_true)
-ssim(u_approx, u_true)
-psnr(u_approx, u_true)
+u_sol, fval = splitreg_reconstruction(Fθ, d, opt)
+println("SplitReg sol: SSIM = ", ssim(u_sol, u_true), ", PSNR = ", psnr(u_sol, u_true))
+
+## Splitting (Anderson)
+
+# Optimization options
+λ = 0.01f0*sqrt(L)
+steplength = 1f0/(1f0+λ^2)
+u_ref = zeros(ComplexF32, n)
+hist_size = 10
+β = 1f0
+opt = splitregAnderson_reconstruction_options(; niter=10, steplength=steplength, λ=λ, u_ref=u_ref, hist_size=10, β=β,verbose=true)
+
+# Solution
+u_sol, fval = splitreg_reconstruction(Fθ, d, opt)
+println("SplitRegAnderson sol: SSIM = ", ssim(u_sol, u_true), ", PSNR = ", psnr(u_sol, u_true))
