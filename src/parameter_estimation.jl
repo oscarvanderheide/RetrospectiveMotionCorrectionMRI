@@ -27,6 +27,7 @@ parameter_estimation_options(; niter::Integer=10, steplength::T=1.0, λ::T=0.0, 
 function parameter_estimation(F::NFFTParametericLinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, θ::AbstractArray{T}, opt::AbstractOptionsParameterEstimation{T}) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
+    θ = deepcopy(θ)
     fval = Array{T,1}(undef, opt.niter)
     nt, _ = size(F.K)
     interp_flag = ~isnothing(opt.interp_matrix); interp_flag && (Ip = opt.interp_matrix)

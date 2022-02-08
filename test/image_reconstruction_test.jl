@@ -24,14 +24,24 @@ ssim_approx = ssim(u_approx, u_true)
 psnr_approx = psnr(u_approx, u_true)
 println("Approx.: SSIM = ", ssim_approx, ", PSNR = ", psnr_approx)
 
-# Optimization options
+# # Optimization options
+# niter = 10
+# λ = 1f-6
+# steplength = 1f0
+# reg_mean = zeros(ComplexF32, n)
+# hist_size = 10
+# β = 1f0
+# opt = image_reconstruction_options(; niter=niter, steplength=steplength, λ=λ, hist_size=hist_size, β=β, reg_mean=reg_mean, verbose=true)
+
+# Setting up proxy
+g = gradient_norm(2, 1, n, tuple(h...); T=ComplexF32)
+ε = 0.1f0*g(u_true)
+opt_proj = opt_fista(1f0/12f0; niter=200, Nesterov=true)
+prox(u, λ) = project(u, ε, g, opt_proj)
+
+# Optimization options (FISTA)
 niter = 10
-λ = 1f-6
-steplength = 1f0
-reg_mean = zeros(ComplexF32, n)
-hist_size = 10
-β = 1f0
-opt = image_reconstruction_options(; niter=niter, steplength=steplength, λ=λ, hist_size=hist_size, β=β, reg_mean=reg_mean, verbose=true)
+opt = image_reconstruction_FISTA_options(; niter=niter, steplength=nothing, niter_spect=10, prox=prox, Nesterov=true, verbose=true)
 
 # Solution
 u0 = zeros(ComplexF32, n)

@@ -11,23 +11,30 @@ X = spatial_sampling(n; h=h)
 K = kspace_sampling(X; readout=:z, phase_encode=:xy)
 nt, nk = size(K)
 F = nfft(X, K; tol=1f-5)
-θ = zeros(Float32, 64, 64, 6)
-θ[:, 33+10:end, 1:3] .= 3f0
-θ[:, 33+10:end, 4:6] .= pi/180*3
-θ = reshape(θ, nt, 6)
+θ_true = imresize(randn(Float32, Int64(nt/128), 6), nt, 6)
+smooth_fact = nt/32
+w = Kernel.gaussian((smooth_fact, ))
+for i = 1:3
+    θ_true[:, i] = imfilter(θ_true[:, i], w, "circular")
+    θ_true[:, i] .*= 3f0/norm(θ_true[:, i], Inf)
+end
+for i = 4:6
+    θ_true[:, i] = imfilter(θ_true[:, i], w, "circular")
+    θ_true[:, i] .*= 2f0/(180f0*norm(θ_true[:, i], Inf))
+end
 
 # Data
-d = F(θ)*u_true
+d = F(θ_true)*u_true
 
 # Optimization options
-niter = 100
+niter = 200
 steplength = 1f0
-λ = 1f1
+λ = 0f0
 cdiag = 1f-5
 cid = 1f-1
 hist_size = 10
 β = 1f0
-ti = Float32.(range(1, nt; length=Int64(nt/1)))
+ti = Float32.(range(1, nt; length=Int64(nt/16)))
 t = Float32.(1:nt)
 Ip = interpolation1d_motionpars_linop(ti, t)
 D = derivative1d_motionpars_linop(t, 2; pars=(true, true, true, true, true, true))/4f0
