@@ -1,51 +1,41 @@
-using LinearAlgebra, BlindMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, Flux, ImageFiltering, PyPlot, JLD
+using BlindMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, AbstractLinearOperators, PyPlot, JLD, ImageFiltering, LinearAlgebra
+include(string(pwd(), "/scripts/plot_results.jl"))
 
-# Numerical phantom
-h = [1f0, 1f0, 1f0]
-u_true = Float32.(load("./data/shepplogan3D_128.jld")["u"])
-n = size(u_true)
-u_true = complex(u_true/norm(u_true, Inf))
+# Experiment name/type
+phantom = "Invivo3D_03-03-2022"; motion = "sudden_motion"
+experiment_name = string(phantom, "/", motion)
 
-# Fourier operator
-X = spatial_sampling(n; h=h)
-K = kspace_sampling(X; readout=:z, phase_encode=:xy); nt, nk = size(K)
-F = nfft(X, K; tol=1f-5)
-θ = zeros(Float32, nt, 6)
-θ[Int64(floor(0.6*nt)):end, 1:3] .= 3f0
-θ[Int64(floor(0.6*nt)):end, 4:6] .= pi/180*3
-Fθ = F(θ)
+# Setting folder/savefiles
+phantom_folder = string(pwd(), "/data/", phantom, "/")
+data_folder    = string(pwd(), "/data/", experiment_name, "/")
 
-# Data
-d = Fθ*u_true
+# Loading data
+X = load(string(data_folder, "data.jld"))["X"]
+K = load(string(data_folder, "data.jld"))["K"]
+data = load(string(data_folder, "data.jld"))["data"]
+ground_truth = load(string(phantom_folder, "ground_truth.jld"))["ground_truth"]
+vmin = 0; vmax = maximum(abs.(ground_truth))
 
-# Approximated solution
-u_approx = nfft_linop(X, K; tol=1f-5)'*d
-ssim_approx = ssim(u_approx, u_true)
-psnr_approx = psnr(u_approx, u_true)
-println("Approx.: SSIM = ", ssim_approx, ", PSNR = ", psnr_approx)
+# Structure-guided prior
+# struct_prior = true
+struct_prior = false
+struct_prior && (prior = load(string(phantom_folder, "prior.jld"))["prior"])
 
-# # Optimization options
-# niter = 10
-# λ = 1f-6
-# steplength = 1f0
-# reg_mean = zeros(ComplexF32, n)
-# hist_size = 10
-# β = 1f0
-# opt = image_reconstruction_options(; niter=niter, steplength=steplength, λ=λ, hist_size=hist_size, β=β, reg_mean=reg_mean, verbose=true)
+# Setting Fourier operator
+nt, nk = size(K)
+F0 = nfft(X, K; tol=1f-6)(zeros(Float32,nt,6))
+u_conventional = F0'*data
 
-# Setting up proxy
-g = gradient_norm(2, 1, n, tuple(h...); T=ComplexF32)
-ε = 0.1f0*g(u_true)
-opt_proj = opt_fista(1f0/12f0; niter=200, Nesterov=true)
-prox(u, λ) = project(u, ε, g, opt_proj)
+# Image reconstruction options
+struct_prior ? (η = 1f-2; P = structural_weight(prior; η=η)) : (P = nothing)
+g = gradient_norm(2, 1, size(ground_truth), (1f0,1f0,1f0); weight=P, T=ComplexF32)
+ε = 0.5f0*g(u_conventional)
+opt_proj = opt_fista(1f0/12f0; niter=5, Nesterov=true)
+prox(u, _) = project(u, ε, g, opt_proj)
+loss = data_residual_loss(ComplexF32, 2, 2)
+calibration_options = calibration(:readout, 1f10)
+opt_recon = image_reconstruction_FISTA_options(Float32; loss=loss, niter=10, steplength=nothing, niter_EstLipschitzConst=3, prox=prox, Nesterov=true, calibration=calibration_options, verbose=true)
 
-# Optimization options (FISTA)
-niter = 10
-opt = image_reconstruction_FISTA_options(; niter=niter, steplength=nothing, niter_spect=10, prox=prox, Nesterov=true, verbose=true)
-
-# Solution
-u0 = zeros(ComplexF32, n)
-u_sol, fval = image_reconstruction(Fθ, d, u0, opt)
-ssim_sol = ssim(u_sol, u_true)
-psnr_sol = psnr(u_sol, u_true)
-println("Recon. sol: SSIM = ", ssim_sol, ", PSNR = ", psnr_sol)
+# u0 = zeros(ComplexF32, size(ground_truth))
+u0 = u_conventional
+u, fval, A = image_reconstruction(F0, data, u0, opt_recon)

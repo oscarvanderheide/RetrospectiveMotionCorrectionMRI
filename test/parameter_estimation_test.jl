@@ -2,7 +2,7 @@ using LinearAlgebra, BlindMotionCorrectionMRI, UtilitiesForMRI, Flux, PyPlot, JL
 
 # Numerical phantom
 h = [1f0, 1f0, 1f0]
-u_true = Float32.(load("./data/shepplogan3D_64.jld")["u"])
+u_T1 = load("./data/BrainWeb3D_256/BrainWeb3D_256.jld")["T1"]
 n = size(u_true)
 u_true = complex(u_true/norm(u_true, Inf))
 
