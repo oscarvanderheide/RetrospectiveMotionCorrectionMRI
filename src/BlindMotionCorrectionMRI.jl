@@ -1,6 +1,6 @@
 module BlindMotionCorrectionMRI
 
-using LinearAlgebra, AbstractLinearOperators, FastSolversForWeightedTV, UtilitiesForMRI, Flux, ImageQualityIndexes, SparseArrays, PyPlot, Statistics
+using LinearAlgebra, AbstractLinearOperators, FastSolversForWeightedTV, UtilitiesForMRI, Flux, ImageQualityIndexes, SparseArrays, Statistics
 import Flux.Optimise: update!
 
 const RealOrComplex{T<:Real} = Union{T,Complex{T}}

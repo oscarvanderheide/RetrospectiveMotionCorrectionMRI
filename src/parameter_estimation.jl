@@ -178,7 +178,7 @@ end
 
 # Parameter processing utilities
 
-function interp_linear_filling(n::NTuple{2,Integer}, θ::AbstractArray{T,2}, fact::Integer; keep_low_freqs::Bool=false) where {T<:Real}
+function interp_linear_filling(n::NTuple{2,Integer}, θ::AbstractArray{T,2}, fact::Integer; keep_low_freqs::Bool=true, extrapolate::Bool=false) where {T<:Real}
     (fact == 0) && (return θ)
 
     # Find indexes corresponding to low-frequency region corners
@@ -191,20 +191,26 @@ function interp_linear_filling(n::NTuple{2,Integer}, θ::AbstractArray{T,2}, fac
     j1 = findfirst(k2 .>= -k_max/2^fact)
     j2 = findlast( k2 .<=  k_max/2^fact)
 
-    # Setting parameters to mean value
+    # Setting parameters to mean value in the central portion of the k-space
     θ_ = deepcopy(reshape(θ, n1, n2, 6))
     @inbounds for j = j1:j2, p = 1:6
         θ_[i1:i2, j, p] .= mean(θ_[i1:i2, j, p])
     end
-    θ_[:,      1:j1-1, :] .= reshape(θ_[i1, j1, :], 1, 1, 6)
-    θ_[1:i1-1, j1,     :] .= reshape(θ_[i1, j1, :], 1, 6)
+
+    # Interpolate in between low-frequency lines
     @inbounds for j = j1:j2-1, p = 1:6
         t = range(T(0), T(1); length=n2-i2+i1-1)
         θ_[i2+1:end, j,   p] .= vec(θ_[i2, j, p].+t[1:n2-i2].*(θ_[i1, j+1, p]-θ_[i2, j, p]))
         θ_[1:i1-1,   j+1, p] .= vec(θ_[i2, j, p].+t[n2-i2+1:end].*(θ_[i1, j+1, p]-θ_[i2, j, p]))
     end
-    θ_[i2+1:end, j2,       :] .= reshape(θ_[i2, j2, :], 1, 6)
-    θ_[:,        j2+1:end, :] .= reshape(θ_[i2, j2, :], 1, 1, 6)
+
+    # Extrapolate everywhere else
+    if extrapolate
+        θ_[:,      1:j1-1, :] .= reshape(θ_[i1, j1, :], 1, 1, 6)
+        θ_[1:i1-1, j1,     :] .= reshape(θ_[i1, j1, :], 1, 6)
+        θ_[i2+1:end, j2,       :] .= reshape(θ_[i2, j2, :], 1, 6)
+        θ_[:,        j2+1:end, :] .= reshape(θ_[i2, j2, :], 1, 1, 6)
+    end
 
     # Restore low frequencies if required
     keep_low_freqs && (θ_[i1:i2, j1:j2, :] .= reshape(θ, n1, n2, 6)[i1:i2, j1:j2, :])
