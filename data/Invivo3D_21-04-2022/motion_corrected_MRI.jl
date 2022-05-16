@@ -35,6 +35,7 @@ niter_outloop = [100, 100, 100]
 # niter_parest  = [1, 1, 1]
 # niter_outloop = [10, 10, 10]
 ε_schedule = [0.1f0, 0.5f0, 0.8f0]
+# ε_schedule = [0.1f0]
 for (i, scale) in enumerate(n_scales:-1:0), (j, ε_rel) in enumerate(ε_schedule)
     global u, θ
 
@@ -48,8 +49,8 @@ for (i, scale) in enumerate(n_scales:-1:0), (j, ε_rel) in enumerate(ε_schedule
     # Optimization options:
 
         ## Parameter estimation
-        # ti_h_loc = Float32.(range(1, nt_h; length=size(u_conventional_h,1)))
-        ti_h_loc = Float32.(1:nt_h)
+        ti_h_loc = Float32.(range(1, nt_h; length=size(u_conventional_h,1)))
+        # ti_h_loc = Float32.(1:nt_h)
         t_h_loc  = Float32.(1:nt_h)
         Ip_c2f_loc = interpolation1d_motionpars_linop(ti_h_loc, t_h_loc)
         Ip_f2c_loc = interpolation1d_motionpars_linop(t_h_loc, ti_h_loc)
@@ -87,11 +88,11 @@ for (i, scale) in enumerate(n_scales:-1:0), (j, ε_rel) in enumerate(ε_schedule
 
 end
 
-# # Final rigid registration wrt ground-truth
-# ground_truth = load(string(data_folder, "ground_truth.jld"))["ground_truth"]
-# vmin = 0; vmax = maximum(abs.(ground_truth))
-# opt_reg = rigid_registration_options(Float32; niter=10, steplength=1f0, calibration=true, verbose=true)
-# u, _, _ = rigid_registration(u, ground_truth, nothing, opt_reg)
+# Final rigid registration wrt ground-truth
+ground_truth = load(string(data_folder, "ground_truth.jld"))["ground_truth"]
+vmin = 0; vmax = maximum(abs.(ground_truth))
+opt_reg = rigid_registration_options(Float32; niter=20, verbose=true)
+u, _, _ = rigid_registration(u, ground_truth, nothing, opt_reg)
 
 # # Reconstruction quality
 # x, y, z = div.(size(u), 2).+1
@@ -107,4 +108,4 @@ end
 # plot_3D_result(ground_truth, 0, maximum(abs.(ground_truth)); x=x, y=y, z=z, filepath=string(figures_folder, "ground_truth"), ext=".png")
 # plot_3D_result(u_conventional, 0, maximum(abs.(u_conventional)); x=x, y=y, z=z, filepath=string(figures_folder, "conventional"), ext=".png")
 # plot_3D_result(u, 0, maximum(abs.(u)); x=x, y=y, z=z, filepath=string(figures_folder, extra), ext=".png")
-# plot_parameters(1:size(θ,1), θ, nothing; fmt1="b", fmt2="r--", linewidth1=2, linewidth2=1, filepath=string(figures_folder, "motion_pars_", extra), ext=".png")
+# plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -1, -1, -1], vmax=[3, 3, 3, 10, 10, 10], fmt1="b", fmt2="r--", linewidth1=2, linewidth2=1, filepath=string(figures_folder, "motion_pars_", extra), ext=".png")

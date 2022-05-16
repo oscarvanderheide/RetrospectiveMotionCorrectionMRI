@@ -34,7 +34,7 @@ function plot_3D_result(u, vmin, vmax; h::Union{Nothing,NTuple{3,<:Real}}=nothin
 
 end
 
-function plot_parameters(t::AbstractVector, θ::AbstractArray, θ_ref::Union{Nothing,AbstractArray}; plot_flag::AbstractVector{Bool}=[true,true,true,true,true,true], vmin::AbstractArray=[nothing,nothing,nothing,nothing,nothing,nothing], vmax::AbstractArray=[nothing,nothing,nothing,nothing,nothing,nothing], fmt1::Union{Nothing,AbstractString}=nothing, fmt2::Union{Nothing,AbstractString}=nothing, linewidth1=2, linewidth2=1, xlabel::Union{Nothing,AbstractString}="t", ylabel::Union{Nothing,AbstractVector}=[L"$\tau_x$ (px)", L"$\tau_y$ (px)", L"$\tau_z$ (px)", L"$\theta_{xy}$ ($^{\circ}$)", L"$\theta_{xz}$ (rad)", L"$\theta_{yz}$ ($^{\circ}$)"], filepath="", ext=".png")
+function plot_parameters(t::AbstractVector, θ::AbstractArray, θ_ref::Union{Nothing,AbstractArray}; plot_flag::AbstractVector{Bool}=[true,true,true,true,true,true], vmin::AbstractArray=[nothing,nothing,nothing,nothing,nothing,nothing], vmax::AbstractArray=[nothing,nothing,nothing,nothing,nothing,nothing], fmt1::Union{Nothing,AbstractString}=nothing, fmt2::Union{Nothing,AbstractString}=nothing, linewidth1=2, linewidth2=1, xlabel::Union{Nothing,AbstractString}="t", ylabel::Union{Nothing,AbstractVector}=[L"$\tau_x$ (mm)", L"$\tau_y$ (mm)", L"$\tau_z$ (mm)", L"$\theta_{xy}$ ($^{\circ}$)", L"$\theta_{xz}$ ($^{\circ}$)", L"$\theta_{yz}$ ($^{\circ}$)"], filepath="", ext=".png")
 
     nplots = count(plot_flag)
     _, ax = subplots(nplots, 1)
@@ -46,13 +46,11 @@ function plot_parameters(t::AbstractVector, θ::AbstractArray, θ_ref::Union{Not
             ax[c].plot(t, C*θ[:,i],     fmt1, linewidth=linewidth1, label="Estimated")
             ~isnothing(θ_ref) && ax[c].plot(t, C*θ_ref[:,i], fmt2, linewidth=linewidth2, label="Reference")
             (c == 1) && ax[c].legend(loc="upper right")
-            # ax[i].plot(θ[:,i],     t, fmt1, linewidth=linewidth)
-            # ax[i].plot(θ_ref[:,i], t, fmt2, linewidth=linewidth)
             ~isnothing(xlabel) && (i == 6) && ax[c].set(xlabel=xlabel)
             (i < 6) && ax[c].get_xaxis().set_ticks([])
             ~isnothing(ylabel[i]) && ax[c].set(ylabel=ylabel[i])
-            # ~isnothing(ylabel[i]) && ax[c].set(xlabel=ylabel[i])
-            # ~isnothing(xlabel[i]) && ax[c].set(ylabel=xlabel[i])
+
+            # Axes limit
             if isnothing(vmin[i])
                 ~isnothing(θ_ref) ? (vmin_i = minimum(C*θ_ref[:,i])) : (vmin_i = minimum(C*θ[:,i]))
             else
@@ -65,7 +63,6 @@ function plot_parameters(t::AbstractVector, θ::AbstractArray, θ_ref::Union{Not
             end
             Δv = vmax_i-vmin_i
             ax[c].set(ylim=[vmin_i-0.1*Δv, vmax_i+0.1*Δv])
-            # ax[c].set(xlim=[vmin-0.1*Δv, vmax+0.1*Δv])
 
             c += 1
         end
