@@ -17,21 +17,22 @@ F = nfft(X, K; tol=1f-6)
 
 # Parameter estimation options
 nt, _ = size(F.K)
-# ti = Float32.(range(1, nt; length=size(ground_truth,1)))
-ti = Float32.(1:nt)
+ti = Float32.(range(1, nt; length=size(ground_truth,1)))
+# ti = Float32.(1:nt)
 t  = Float32.(1:nt)
 Ip = interpolation1d_motionpars_linop(ti, t)
 loss = data_residual_loss(ComplexF32, 2, 2)
 # calibration_options = calibration(:readout, 1f10)
 calibration_options = nothing
-opt_parest = parameter_estimation_options(Float32; loss=loss, niter=200, steplength=1f0, λ=0, cdiag=1f-13, cid=1f10, reg_matrix=nothing, interp_matrix=Ip, calibration=calibration_options, verbose=true)
+opt_parest = parameter_estimation_options(Float32; loss=loss, niter=50, steplength=1f0, λ=0, cdiag=1f-13, cid=1f10, reg_matrix=nothing, interp_matrix=Ip, calibration=calibration_options, verbose=true)
 
 # Parameter estimation
-# θ0 = zeros(Float32, size(Ip,2))
-θ0 = zeros(Float32, nt, 6)
+θ0 = zeros(Float32, size(Ip,2))
+# θ0 = zeros(Float32, nt, 6)
 θ, fval = parameter_estimation(F, ground_truth, data, θ0, opt_parest)
 
 # # Plot results
+θ = reshape(Ip*θ, nt, 6)
 u_conventional = F(0*θ)'*data
 u = F(θ)'*data
 include(string(pwd(), "/scripts/plot_results.jl"))
