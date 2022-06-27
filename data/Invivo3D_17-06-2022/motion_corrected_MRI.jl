@@ -2,7 +2,7 @@ using BlindMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, Abstr
 include(string(pwd(), "/scripts/plot_results.jl"))
 
 # Experiment name/type
-experiment_name = "Invivo3D_21-04-2022"; println(experiment_name, "\n")
+experiment_name = "Invivo3D_17-06-2022"; println(experiment_name, "\n")
 
 # Setting folder/savefiles
 data_folder    = string(pwd(), "/data/", experiment_name, "/")
@@ -24,18 +24,18 @@ F = nfft(X, K; tol=1f-6)
 nt, nk = size(K)
 u_conventional = F(zeros(Float32,nt,6))'*data
 
-# Multi-scale inversion
-u = u_conventional
-θ = zeros(Float32, nt, 6)
-n_scales = 2
-niter_imrecon = 1*ones(Int64, n_scales+1)
-niter_parest  = [1, 1, 1]
-niter_outloop = [100, 100, 100]
-# niter_imrecon = 10*ones(Int64, n_scales+1)
-# niter_parest  = [1, 1, 1]
-# niter_outloop = [10, 10, 10]
+# Multi-scale inversion schedule
+n_scales = 3
+niter_imrecon = ones(Int64, n_scales+1)
+niter_parest  = [1, 1, 1, 1]
+niter_outloop = [100, 100, 100, 10]
 ε_schedule = [0.1f0, 0.5f0, 0.8f0]
-# ε_schedule = [0.1f0]
+
+# Setting starting values
+u = deepcopy(u_conventional)
+θ = zeros(Float32, nt, 6)
+
+# Loop
 for (i, scale) in enumerate(n_scales:-1:0), (j, ε_rel) in enumerate(ε_schedule)
     global u, θ
 
@@ -90,22 +90,23 @@ end
 
 # Final rigid registration wrt ground-truth
 ground_truth = load(string(data_folder, "ground_truth.jld"))["ground_truth"]
-vmin = 0; vmax = maximum(abs.(ground_truth))
 opt_reg = rigid_registration_options(Float32; niter=20, verbose=true)
-u, _, _ = rigid_registration(u, ground_truth, nothing, opt_reg)
+u_reg, _, _ = rigid_registration(u, ground_truth, nothing, opt_reg)
 
-# # Reconstruction quality
-# x, y, z = div.(size(u), 2).+1
-# ssim_recon = ssim(u, ground_truth; x=x, y=y, z=z)
-# psnr_recon = psnr(u, ground_truth; x=x, y=y, z=z)
-# println("Joint reconstruction: ssim_recon = ", ssim_recon, ", psnr_recon = ", psnr_recon)
+# Reconstruction quality
+ssim_recon = ssim(abs.(u_reg)/norm(u_reg, Inf), abs.(ground_truth)/norm(ground_truth, Inf))
+psnr_recon = psnr(abs.(u_reg)/norm(u_reg, Inf), abs.(ground_truth)/norm(ground_truth, Inf))
+ssim_conv = ssim(abs.(u_conventional)/norm(u_conventional, Inf), abs.(ground_truth)/norm(ground_truth, Inf))
+psnr_conv = psnr(abs.(u_conventional)/norm(u_conventional, Inf), abs.(ground_truth)/norm(ground_truth, Inf))
+println("Joint reconstruction: ssim_recon = ", ssim_recon, ", psnr_recon = ", psnr_recon)
 
 # Save and plot results
-# x, y, z = div.(size(ground_truth),2).+1
-# struct_prior ? (extra = "joint_sTV") : (extra = "joint_TV")
-# @save string(results_folder, "results_", extra, ".jld") u θ# ssim_recon psnr_recon
-# struct_prior && plot_3D_result(prior, minimum(abs.(prior)), maximum(abs.(prior)); x=x, y=y, z=z, filepath=string(figures_folder, "prior"), ext=".png")
-# plot_3D_result(ground_truth, 0, maximum(abs.(ground_truth)); x=x, y=y, z=z, filepath=string(figures_folder, "ground_truth"), ext=".png")
-# plot_3D_result(u_conventional, 0, maximum(abs.(u_conventional)); x=x, y=y, z=z, filepath=string(figures_folder, "conventional"), ext=".png")
-# plot_3D_result(u, 0, maximum(abs.(u)); x=x, y=y, z=z, filepath=string(figures_folder, extra), ext=".png")
-# plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -1, -1, -1], vmax=[3, 3, 3, 10, 10, 10], fmt1="b", fmt2="r--", linewidth1=2, linewidth2=1, filepath=string(figures_folder, "motion_pars_", extra), ext=".png")
+vmin = 0; vmax = maximum(abs.(ground_truth))
+x, y, z = div.(size(u), 2).+1
+struct_prior ? (extra = "joint_sTV") : (extra = "joint_TV")
+@save string(results_folder, "results_", extra, ".jld") u u_reg u_conventional θ ssim_recon psnr_recon ssim_conv psnr_conv
+struct_prior && plot_3D_result(prior, vmin, vmax; x=x, y=y, z=z, filepath=string(figures_folder, "prior"), ext=".png")
+plot_3D_result(ground_truth, vmin, vmax; x=x, y=y, z=z, filepath=string(figures_folder, "ground_truth"), ext=".png")
+plot_3D_result(u_conventional, vmin, vmax; x=x, y=y, z=z, filepath=string(figures_folder, "conventional"), ext=".png")
+plot_3D_result(u_reg, vmin, maximum(abs.(ground_truth)); x=x, y=y, z=z, filepath=string(figures_folder, extra), ext=".png")
+plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", fmt2="r--", linewidth1=2, linewidth2=1, filepath=string(figures_folder, "motion_pars_", extra), ext=".png")

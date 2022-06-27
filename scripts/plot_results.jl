@@ -67,8 +67,8 @@ function plot_parameters(t::AbstractVector, θ::AbstractArray, θ_ref::Union{Not
             c += 1
         end
     end
-    mngr = get_current_fig_manager()
-    mngr.window.setGeometry(50, 100, 700, 1000); pause(0.1)
+    # mngr = get_current_fig_manager()
+    # mngr.window.setGeometry(50, 100, 700, 1000); pause(0.1)
     savefig(string(filepath, ext), dpi=300, transparent=false, bbox_inches="tight")
 
 end
