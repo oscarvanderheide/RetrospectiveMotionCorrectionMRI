@@ -101,12 +101,11 @@ psnr_conv = psnr(abs.(u_conventional)/norm(u_conventional, Inf), abs.(ground_tru
 println("Joint reconstruction: ssim_recon = ", ssim_recon, ", psnr_recon = ", psnr_recon)
 
 # Save and plot results
-vmin = 0; vmax = maximum(abs.(ground_truth))
 x, y, z = div.(size(u), 2).+1
 struct_prior ? (extra = "joint_sTV") : (extra = "joint_TV")
 @save string(results_folder, "results_", extra, ".jld") u u_reg u_conventional θ ssim_recon psnr_recon ssim_conv psnr_conv
-struct_prior && plot_3D_result(prior, vmin, vmax; x=x, y=y, z=z, filepath=string(figures_folder, "prior"), ext=".png")
-plot_3D_result(ground_truth, vmin, vmax; x=x, y=y, z=z, filepath=string(figures_folder, "ground_truth"), ext=".png")
-plot_3D_result(u_conventional, vmin, vmax; x=x, y=y, z=z, filepath=string(figures_folder, "conventional"), ext=".png")
-plot_3D_result(u_reg, vmin, maximum(abs.(ground_truth)); x=x, y=y, z=z, filepath=string(figures_folder, extra), ext=".png")
+struct_prior && plot_3D_result(prior, 0, norm(prior, Inf); x=x, y=y, z=z, filepath=string(figures_folder, "prior"), ext=".png")
+plot_3D_result(ground_truth, 0, norm(ground_truth, Inf); x=x, y=y, z=z, filepath=string(figures_folder, "ground_truth"), ext=".png")
+plot_3D_result(u_conventional, 0, norm(u_conventional, Inf); x=x, y=y, z=z, filepath=string(figures_folder, "conventional"), ext=".png")
+plot_3D_result(u_reg, 0, norm(u_reg, Inf); x=x, y=y, z=z, filepath=string(figures_folder, extra), ext=".png")
 plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", fmt2="r--", linewidth1=2, linewidth2=1, filepath=string(figures_folder, "motion_pars_", extra), ext=".png")
