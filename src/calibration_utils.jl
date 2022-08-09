@@ -3,7 +3,7 @@
 export GlobalCalibration, GlobalCalibrationOperator, ReadoutCalibration, ReadoutCalibrationOperator
 export calibration, calibration_linop
 
-abstract type AbstractCalibrationOperator{CT}<:AbstractLinearOperator{CT,2,2} end
+abstract type AbstractCalibrationOperator{CT<:Complex}<:AbstractLinearOperator{CT,2,2} end
 abstract type AbstractCalibration{T<:Real} end
 
 

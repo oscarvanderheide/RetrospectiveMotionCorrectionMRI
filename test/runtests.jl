@@ -1,12 +1,10 @@
 using JointRetrospectiveMotionCorrectionMRI, Test
 
 @testset "JointRetrospectiveMotionCorrectionMRI.jl" begin
-    include("./test_spatial_geometry.jl")
-    include("./test_kspace_geometry.jl")
-    # include("./test_motionpars_utils.jl")
-    # include("./test_nfft.jl")
-    # include("./test_rotations.jl")
-    include("./test_translations.jl")
-    include("./test_scaling_utils.jl")
-    include("./test_plotting_utils.jl")
+    include("./test_data_residual_loss.jl")
+    include("./test_calibration_utils.jl")
+    include("./test_optimization_utils.jl")
+    include("./test_imagequality_utils.jl")
+    include("./test_image_reconstruction.jl")
+    include("./test_parameter_estimation.jl")
 end

@@ -1,34 +1,33 @@
 # Image reconstruction utilities
 
-export OptionsImageReconstruction
-export image_reconstruction_options, image_reconstruction_FISTA_options, image_reconstruction
+export OptionsImageReconstructionFISTA
+export image_reconstruction_FISTA_options, image_reconstruction
 
 
 ## Reconstruction options
 
-abstract type AbstractOptionsImageReconstruction end
-
 mutable struct OptionsImageReconstructionFISTA{T}<:AbstractOptionsImageReconstruction
     loss::AbstractLossFunction{Complex{T}}
+    prox::Function
     niter::Integer
     steplength::Union{Nothing,T}
-    niter_EstLipschitzConst::Integer
-    prox::Function
+    niter_estim_Lipschitz_const::Union{Nothing,Integer}
     Nesterov::Bool
+    reset_counter::Union{Nothing,Integer}
     calibration::Union{Nothing,AbstractCalibration{T}}
     verbose::Bool
 end
 
-image_reconstruction_FISTA_options(T::DataType;
-                                   loss::AbstractLossFunction=MixedNorm{<:Complex,2,2},
+image_reconstruction_FISTA_options(loss::AbstractLossFunction{CT},
+                                   prox::Function;
                                    niter::Integer=10,
                                    steplength::Union{Nothing,Real}=nothing,
-                                   niter_EstLipschitzConst::Integer=3,
-                                   prox::Function,
+                                   niter_estim_Lipschitz_const::Union{Nothing,Integer}=3,
                                    Nesterov::Bool=true,
+                                   reset_counter::Union{Nothing,Integer}=nothing,
                                    calibration::Union{Nothing,AbstractCalibration}=nothing,
-                                   verbose::Bool=false) =
-    OptionsImageReconstructionFISTA{T}(loss, niter, isnothing(steplength) ? nothing : T(steplength), niter_EstLipschitzConst, prox, Nesterov, calibration, verbose)
+                                   verbose::Bool=false) where {T<:Real,CT<:RealOrComplex{T}} =
+    OptionsImageReconstructionFISTA{T}(loss, prox, niter, steplength, niter_estim_Lipschitz_const, Nesterov, reset_counter, calibration, verbose)
 
 
 ## Reconstruction algorithms
@@ -38,22 +37,20 @@ function image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArra
     # Initialize variables
     fval = Array{T,1}(undef, opt.niter)
     u = deepcopy(u)
-    loss = opt.loss
 
     # Estimate steplength if not provided
     if isnothing(opt.steplength)
-        opt.verbose && println("Estimating steplength...")
-        LipConst = spectral_radius(F'*F, randn(CT, size(u)); niter=opt.niter_EstLipschitzConst)*Lipschitz_constant(loss)
+        opt.verbose && (@info "Estimating steplength...")
+        L = spectral_radius(F'*F, randn(CT, size(u)); niter=opt.niter_estim_Lipschitz_const)*Lipschitz_constant(opt.loss)
     else
-        LipConst = T(1)/opt.steplength
+        L = T(1)/opt.steplength
     end
 
     # Initialize FISTA updater
-    opt_FISTA = FISTA(LipConst, opt.prox; Nesterov=opt.Nesterov)
+    opt_FISTA = OptimiserFISTA(L, opt.prox; Nesterov=opt.Nesterov, reset_counter=opt.reset_counter)
 
     # Iterative solution
-    global A
-    isnothing(opt.calibration) && (A = identity_operator(CT, size(d)))
+    isnothing(opt.calibration) && (global A = identity_operator(CT, size(d)))
     for n = 1:opt.niter
 
         # Evaluate forward operator
@@ -64,16 +61,16 @@ function image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArra
 
         # Evaluate objective
         r = A*Fu-d
-        fval[n], ∇l = loss(r; Hessian=false)
+        fval[n], ∇l = opt.loss(r; Hessian=false)
 
         # Print message
-        opt.verbose && println("Iter [", n, "/", opt.niter, "], fval = ", fval[n])
+        opt.verbose && (@info string("Iter [", n, "/", opt.niter, "], fval = ", fval[n]))
 
         # Compute gradient
         g = F'*A'*∇l
 
         # Update
-        ~isnothing(opt.calibration) && (opt_FISTA.L = LipConst*norm(A)^2)
+        ~isnothing(opt.calibration) && (opt_FISTA.L = L*norm(A)^2)
         update!(opt_FISTA, u, g)
 
     end

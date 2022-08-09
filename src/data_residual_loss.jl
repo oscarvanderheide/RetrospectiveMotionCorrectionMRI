@@ -3,9 +3,6 @@
 export MixedNorm, MixedNormMoreau
 export Lipschitz_constant, data_residual_loss
 
-abstract type AbstractLossFunction{T} end
-abstract type AbstractLossFunctionMoreau{T}<:AbstractLossFunction{T} end
-
 
 ## Mixed norms
 
