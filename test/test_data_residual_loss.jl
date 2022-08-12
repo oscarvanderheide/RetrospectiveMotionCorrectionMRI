@@ -1,4 +1,4 @@
-using LinearAlgebra, MotionCorrectedMRI, Test
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, Test
 
 # Input
 d0 = randn(ComplexF64, 10^2, 10)

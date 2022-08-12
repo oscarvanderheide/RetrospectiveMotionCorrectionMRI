@@ -1,4 +1,4 @@
-using MotionCorrectedMRI, LinearAlgebra
+using RetrospectiveMotionCorrectionMRI, LinearAlgebra
 
 n = (256, 256, 256)
 u = zeros(Float32, n)

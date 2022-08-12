@@ -1,4 +1,4 @@
-using LinearAlgebra, MotionCorrectedMRI, FastSolversForWeightedTV, UtilitiesForMRI, Flux, PyPlot, JLD, Statistics
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, Flux, PyPlot, JLD, Statistics
 
 # In-vivo data
 prior = load("./data/Invivo3D/Invivo3D_unprocessed.jld")["T1_nomotion"]

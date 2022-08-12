@@ -1,4 +1,4 @@
-using LinearAlgebra, MotionCorrectedMRI, UtilitiesForMRI, Flux, PyPlot, JLD
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, UtilitiesForMRI, Flux, PyPlot, JLD
 
 # Numerical phantom
 h = [1f0, 1f0, 1f0]

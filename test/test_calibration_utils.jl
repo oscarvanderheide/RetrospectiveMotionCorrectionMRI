@@ -1,4 +1,4 @@
-using LinearAlgebra, MotionCorrectedMRI, Test, AbstractLinearOperators
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, Test, AbstractLinearOperators
 
 # Random input
 d1 = randn(ComplexF64, 10, 5)
