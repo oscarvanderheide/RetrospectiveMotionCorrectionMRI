@@ -1,7 +1,7 @@
-using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, PyPlot, LinearAlgebra
+using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, ConvexOptimizationUtils, LinearAlgebra, Test
 
 # Spatial geometry
-fov = (1f0, 2f0, 3f0)
+fov = (1f0, 2f0, 2f0)
 n = (64, 64, 64)
 o = (0.5f0, 0.5f0, 0.5f0)
 X = spatial_geometry(fov, n; origin=o)
@@ -23,13 +23,18 @@ noise = 10^(-p/20)*norm(d,Inf)*randn(ComplexF32,size(d))
 dnoise = d+noise
 
 # Image reconstruction options
-h = spacing(X)
-g = gradient_norm(2, 1, size(ground_truth), h; T=ComplexF32)
+h = spacing(X); LD = 4f0*sum(1 ./h.^2)
+opt_inner = FISTA_optimizer(LD; Nesterov=true, niter=20)
+g = gradient_norm(2, 1, size(ground_truth), h, opt_inner; complex=true)
 ε = g(ground_truth)
-prox(u, _) = project(u, ε, g, opt_fista(0.25f0/sum(1f0./h.^2); niter=10, Nesterov=true))
-loss = data_residual_loss(ComplexF32, 2, 2)
-opt_recon = image_reconstruction_FISTA_options(loss, prox; niter=10, steplength=nothing, niter_estim_Lipschitz_const=3, Nesterov=true, reset_counter=20, verbose=true)
+h = indicator(g ≤ ε)    
 
-# u0 = zeros(ComplexF32, size(ground_truth))
-u0 = 0*ground_truth
-u, fval, A = image_reconstruction(F, dnoise, u0, opt_recon)
+# Solve
+L = 1.1f0*spectral_radius(F'*F; niter=3)
+opt_outer = FISTA_optimizer(L; Nesterov=true, niter=30, verbose=true, fun_history=true)
+u0 = zeros(ComplexF32, size(ground_truth))
+u = leastsquares_solve(F, dnoise, u0, opt_outer; prox=h)
+
+# Coherence test w/ minimize
+u_ = minimize(leastsquares_misfit(F, dnoise)+h, u0, opt_outer)
+@test u ≈ u_
