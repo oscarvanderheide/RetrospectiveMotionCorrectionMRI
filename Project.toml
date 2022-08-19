@@ -14,7 +14,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 UtilitiesForMRI = "5f442635-cb9d-4e13-b358-1c870cfef0cf"
 
 [compat]
-julia = "1.7"
+julia = "1.8"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

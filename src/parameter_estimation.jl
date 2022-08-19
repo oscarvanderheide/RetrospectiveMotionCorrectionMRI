@@ -31,7 +31,7 @@ end
 
 ConvexOptimizationUtils.fun_history(opt::OptionsParameterEstimation) = opt.fun_history
 
-ConvexOptimizationUtils.reset!(opt::OptionsParameterEstimation) = (~isnothing(opt.fun_history) && opt.fun_history .= 0; return opt)
+ConvexOptimizationUtils.reset!(opt::OptionsParameterEstimation) = (~isnothing(opt.fun_history) && (opt.fun_history .= 0); return opt)
 
 
 ## Parameter-estimation algorithms
@@ -39,6 +39,7 @@ ConvexOptimizationUtils.reset!(opt::OptionsParameterEstimation) = (~isnothing(op
 function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}, opt::OptionsParameterEstimation{T}) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
+    reset!(opt)
     θ = deepcopy(initial_estimate)
     nt = size(F.kcoord, 1)
     interp_flag = ~isnothing(opt.interp_matrix); interp_flag && (Ip = opt.interp_matrix)
@@ -111,7 +112,8 @@ end
 
 ## Rigid registration
 
-rigid_registration_options(; T::DataType=Float32, niter::Integer=10, verbose::Bool=false, fun_history::Bool=false) = parameter_estimation_options(; T=T, niter=niter, verbose=verbose, fun_history=fun_history)
+rigid_registration_options(; T::DataType=Float32, niter::Integer=10, verbose::Bool=false, fun_history::Bool=false) = parameter_estimation_options(; niter=niter, steplength=T(1), λ=T(0),
+cdiag=T(0), cid=T(0), verbose=verbose, fun_history=fun_history)
 
 function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}, opt::OptionsParameterEstimation{T}; spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
 
