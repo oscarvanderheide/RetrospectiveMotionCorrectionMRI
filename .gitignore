@@ -3,6 +3,7 @@ docs/
 data/
 *.png
 *.jld
+Manifest.toml
 
 
 
