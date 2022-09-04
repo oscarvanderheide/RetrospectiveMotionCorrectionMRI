@@ -39,7 +39,7 @@ function motion_corrected_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::Abst
         opt.verbose && (@info string("--- Image reconstruction..."))
         flag_interp ? (θ_ = reshape(Ip*θ, :, 6)) : (θ_ = θ)
         Fθ = F(θ_)
-        ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = spectral_radius(Fθ*Fθ'; niter=opt.niter_estimate_Lipschitz))
+        ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = T(1.1)*spectral_radius(Fθ*Fθ'; niter=opt.niter_estimate_Lipschitz))
         u = image_reconstruction(Fθ, d, u, opt.opt_imrecon)
 
         # Motion-parameter estimation
