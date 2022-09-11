@@ -23,4 +23,4 @@ ConvexOptimizationUtils.reset!(opt::OptionsImageReconstruction) = (reset!(opt.op
 
 ConvexOptimizationUtils.fun_history(opt::OptionsImageReconstruction) = fun_history(opt.opt)
 
-image_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, opt::OptionsImageReconstruction{T}) where {T<:Real,CT<:RealOrComplex{T}} = leastsquares_solve(F, d, initial_estimate, reset!(opt.opt); prox=opt.prox)
+image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, opt::OptionsImageReconstruction{T}) where {T<:Real,CT<:RealOrComplex{T}} = leastsquares_solve(F, d, initial_estimate, reset!(opt.opt); prox=opt.prox)

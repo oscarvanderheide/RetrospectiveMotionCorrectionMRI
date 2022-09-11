@@ -39,8 +39,14 @@ function motion_corrected_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::Abst
         opt.verbose && (@info string("--- Image reconstruction..."))
         flag_interp ? (θ_ = reshape(Ip*θ, :, 6)) : (θ_ = θ)
         Fθ = F(θ_)
+        # Fθu = Fθ*u ###
+        # (norm(u) != CT(0)) ? (α = sum(conj(Fθu).*d; dims=2)./sum(conj(Fθu).*Fθu; dims=2)) : (α = 1) ###
+        # A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
         ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = T(1.1)*spectral_radius(Fθ*Fθ'; niter=opt.niter_estimate_Lipschitz))
+        # AFθ = A*Fθ ###
+        # ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = T(1.1)*spectral_radius(AFθ*AFθ'; niter=opt.niter_estimate_Lipschitz)) ###
         u = image_reconstruction(Fθ, d, u, opt.opt_imrecon)
+        # u = image_reconstruction(AFθ, d, u, opt.opt_imrecon) ###
 
         # Motion-parameter estimation
         (n == opt.niter) && break
