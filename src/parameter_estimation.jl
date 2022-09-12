@@ -5,14 +5,19 @@ export OptionsParameterEstimation, parameter_estimation_options, parameter_estim
 
 ## Parameter-estimation options
 
+mutable struct HessianRegularizationParameters{T<:Real}
+    scaling_diagonal::T
+    scaling_mean::T
+    scaling_id::T
+end
+
 mutable struct OptionsParameterEstimation{T<:Real}
     niter::Integer
     steplength::T
     λ::T
-    cdiag::T
-    cid::Union{T,NTuple{6,T}}
     reg_matrix::Union{Nothing,AbstractMatrix{T}}
     interp_matrix::Union{Nothing,AbstractMatrix{T}}
+    reg_Hessian::HessianRegularizationParameters{T}
     verbose::Bool
     fun_history::Union{Nothing,AbstractVector{T}}
 end
@@ -20,13 +25,13 @@ end
 function parameter_estimation_options(; niter::Integer=10,
                                         steplength::Real=1f0,
                                         λ::Real=0f0,
-                                        cdiag::Real=0f0, cid::Union{Real,NTuple{6,<:Real}}=0f0,
+                                        scaling_diagonal::Real=0f0, scaling_mean::Real=0f0, scaling_id::Real=0f0,
                                         reg_matrix::Union{Nothing,AbstractMatrix{<:Real}}=nothing,
                                         interp_matrix::Union{Nothing,AbstractMatrix{<:Real}}=nothing,
                                         verbose::Bool=false,
                                         fun_history::Bool=false)
     fun_history ? (fval = Array{typeof(steplength),1}(undef,niter)) : (fval = nothing)
-    return OptionsParameterEstimation(niter, steplength, λ, cdiag, cid, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, verbose, fval)
+    return OptionsParameterEstimation(niter, steplength, λ, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, HessianRegularizationParameters(scaling_diagonal, scaling_mean, scaling_id), verbose, fval)
 end
 
 ConvexOptimizationUtils.fun_history(opt::OptionsParameterEstimation) = opt.fun_history
@@ -36,24 +41,19 @@ ConvexOptimizationUtils.reset!(opt::OptionsParameterEstimation) = (~isnothing(op
 
 ## Parameter-estimation algorithms
 
-function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}, opt::OptionsParameterEstimation{T}) where {T<:Real,CT<:RealOrComplex{T}}
+function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T,2}, opt::OptionsParameterEstimation{T}) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
     reset!(opt)
     θ = deepcopy(initial_estimate)
-    nt = size(F.kcoord, 1)
     interp_flag = ~isnothing(opt.interp_matrix); interp_flag && (Ip = opt.interp_matrix)
-    reg_flag = ~isnothing(opt.reg_matrix) && (opt.λ != T(0)); reg_flag && (D = opt.reg_matrix)
-    gθ = similar(initial_estimate, nt, 6)
-    interp_flag ? (g = similar(initial_estimate)) : (g = gθ)
-    interp_flag ? (Iθ = similar(initial_estimate, nt, 6)) : (Iθ = θ)
-    r = similar(d)
+    reg_flag    = ~isnothing(opt.reg_matrix) && (opt.λ != T(0)); reg_flag && (D = opt.reg_matrix)
 
     # Iterative solution
     @inbounds for n = 1:opt.niter
 
         # Evaluate forward operator
-        interp_flag && (Iθ .= reshape(Ip*vec(θ), nt, 6))
+        interp_flag ? (Iθ = reshape(Ip*vec(θ), :, 6)) : (Iθ = θ)
         Fθu, _, Jθ = ∂(F()*u, Iθ)
 
         # # Calibration ###
@@ -61,13 +61,13 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         # A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
 
         # Data misfit
-        # r .= A*Fθu-d ###
-        r .= Fθu-d
+        # r = A*Fθu-d ###
+        r = Fθu-d
         (~isnothing(opt.fun_history) || opt.verbose) && (fval_n = T(0.5)*norm(r)^2)
 
         # Regularization term
         if reg_flag
-            Dθ = D*vec(Iθ)
+            Dθ = reshape(D*vec(θ), :, 6)
             (~isnothing(opt.fun_history) || opt.verbose) && (fval_n += T(0.5)*opt.λ^2*norm(Dθ)^2)
         end
 
@@ -76,28 +76,25 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         opt.verbose && (@info string("Iter [", n, "/", opt.niter, "], fval = ", fval_n))
 
         # Compute gradient
-        # gθ .= Jθ'*(A'*r) ###
-        gθ .= Jθ'*r
-        reg_flag && (gθ .+= reshape(opt.λ^2*(D'*Dθ), nt, 6))
+        # g = Jθ'*(A'*r) ###
+        g = Jθ'*r
+        interp_flag && (g = reshape(Ip'*vec(g), :, 6))
+        reg_flag && (g .+= opt.λ^2*reshape(D'*vec(Dθ), :, 6))
 
         # Hessian
         H = sparse_matrix_GaussNewton(Jθ)
         # H = sparse_matrix_GaussNewton(Jθ; W=A)
+        interp_flag && (H = Ip'*H*Ip)
         reg_flag && (H .+= opt.λ^2*(D'*D))
 
-        # Hessian preconditioning
-        # H, R = regularize_Hessian!(sparse_matrix_GaussNewton(Jθ; W=A); c_diag=opt.cdiag, c_id=opt.cid) ###
-        H, R = regularize_Hessian!(sparse_matrix_GaussNewton(Jθ); c_diag=opt.cdiag, c_id=opt.cid)
-        ~isnothing(R) && (gθ .+= reshape(R*vec(Iθ), nt, 6)) # consistency correction
-
-        # Interpolation
-        if interp_flag
-            g .= Ip'*vec(gθ)
-            H = Ip'*H*Ip
+        # Marquardt-Levenberg regularization
+        if ~isnothing(opt.reg_Hessian)
+            H, ΔH = regularize_Hessian!(H; regularization_options=opt.reg_Hessian)
+            g .+= reshape(ΔH*vec(θ), :, 6) # consistency correction
         end
 
         # Preconditioning
-        g .= reshape(lu(H)\vec(g), size(g))
+        g = reshape(lu(H)\vec(g), :, 6)
 
         # Update
         θ .-= opt.steplength*g
@@ -108,32 +105,20 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
 
 end
 
-# function regularize_Hessian!(H::AbstractMatrix{T}; cdiag::T=T(0), cid::T=T(0)) where {T<:Real}
-#     if cdiag != T(0)
-#         d = reshape(diag(H), :, 6)
-#         d_mean = sum(d; dims=1)/size(d,1)
-#         D = cdiag*spdiagm(vec(d.+cid*d_mean))
-#         H .+= D
-#         return H, D
-#     else
-#         return H, nothing
-#     end
-# end
-
-function regularize_Hessian!(H::AbstractMatrix{T}; c_diag::T=T(0), c_id::Union{T,NTuple{6,T}}=T(0)) where {T<:Real}
-    d = reshape(diag(H), :, 6)
-    c_id isa T && (c_id = (c_id, c_id, c_id, c_id, c_id, c_id))
-    c_id = reshape([c_id...], 1, 6)
-    D = spdiagm(vec(c_diag*d.+c_id))
-    H .+= D
-    return H, D
+function regularize_Hessian!(H::AbstractMatrix{T}; regularization_options::Union{Nothing,HessianRegularizationParameters{T}}=nothing) where {T<:Real}
+    isnothing(regularization_options) && (return (H, nothing))
+    diagH = reshape(diag(H), :, 6)
+    mean_diag = sum(diagH; dims=1)/size(diagH, 1)
+    ΔH = spdiagm(vec(regularization_options.scaling_diagonal*diagH.+regularization_options.scaling_mean*mean_diag.+regularization_options.scaling_id))
+    H .+= ΔH
+    return H, ΔH
 end
 
 
 ## Rigid registration
 
 rigid_registration_options(; T::DataType=Float32, niter::Integer=10, verbose::Bool=false, fun_history::Bool=false) = parameter_estimation_options(; niter=niter, steplength=T(1), λ=T(0),
-cdiag=T(0), cid=T(0), verbose=verbose, fun_history=fun_history)
+scaling_diagonal=T(0), scaling_mean=T(0), verbose=verbose, fun_history=fun_history)
 
 function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}, opt::OptionsParameterEstimation{T}; spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
 

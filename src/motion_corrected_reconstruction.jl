@@ -23,7 +23,7 @@ ConvexOptimizationUtils.fun_history(opt::OptionsMotionCorrection{T}) where {T<:R
 
 ## Motion-corrected reconstruction algorithms
 
-function motion_corrected_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::AbstractArray{CT,2}, u::AbstractArray{CT,3}, θ::AbstractArray{T}, opt::OptionsMotionCorrection{T}) where {T<:Real,CT<:RealOrComplex{T}}
+function motion_corrected_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::AbstractArray{CT,2}, u::AbstractArray{CT,3}, θ::AbstractArray{T,2}, opt::OptionsMotionCorrection{T}) where {T<:Real,CT<:RealOrComplex{T}}
 
     reset!(opt)
     flag_interp = ~isnothing(opt.opt_parest.interp_matrix)
@@ -37,7 +37,7 @@ function motion_corrected_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::Abst
 
         # Image reconstruction
         opt.verbose && (@info string("--- Image reconstruction..."))
-        flag_interp ? (θ_ = reshape(Ip*θ, :, 6)) : (θ_ = θ)
+        flag_interp ? (θ_ = reshape(Ip*vec(θ), :, 6)) : (θ_ = θ)
         Fθ = F(θ_)
         # Fθu = Fθ*u ###
         # (norm(u) != CT(0)) ? (α = sum(conj(Fθu).*d; dims=2)./sum(conj(Fθu).*Fθu; dims=2)) : (α = 1) ###
