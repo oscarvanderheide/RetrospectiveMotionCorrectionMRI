@@ -11,7 +11,7 @@ figures_folder = string(exp_folder, "figures/")
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
 # for volunteer = ["52763", "52782"], prior_type = ["T1", "FLAIR"], recon_type = ["custom", "DICOM"], motion_type = [1, 2, 3]
-for volunteer = ["52763"], prior_type = ["FLAIR"], motion_type = [3], recon_type = ["custom"]#["DICOM"]#
+for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [3], recon_type = ["custom"]#["DICOM"]#
 
     # Setting files
     experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type), "_", recon_type); @info experiment_subname
@@ -32,7 +32,7 @@ for volunteer = ["52763"], prior_type = ["FLAIR"], motion_type = [3], recon_type
     X = spatial_geometry(fov, size(corrupted)); h = spacing(X)
     opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
     g = gradient_norm(2, 1, size(prior), h, opt; complex=true)
-    prior = project(prior, 0.8f0*g(prior), g)
+    prior = project(prior, 0.5f0*g(prior), g)
     prior ./= norm(prior, Inf)
 
     # Generating synthetic data
