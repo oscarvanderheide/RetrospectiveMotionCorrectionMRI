@@ -69,7 +69,7 @@ for recon_type = ["DICOM"]#["custom"]#
 
         ## Parameter estimation
         scaling_diagonal = 1f-3
-        scaling_mean     = 1f-6
+        scaling_mean     = 1f-4
         scaling_id       = 0f0
         Ip_c2fh = interpolation1d_motionpars_linop(t_coarse, Float32.(t_fine_h))
         opt_parest = parameter_estimation_options(; niter=niter_parest[i], steplength=1f0, λ=0f0, scaling_diagonal=scaling_diagonal, scaling_mean=scaling_mean, scaling_id=scaling_id, reg_matrix=nothing, interp_matrix=Ip_c2fh)
