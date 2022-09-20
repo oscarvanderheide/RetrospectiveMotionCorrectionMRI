@@ -11,8 +11,8 @@ results_folder = string(exp_folder, "results/")
 ~isdir(results_folder) && mkdir(results_folder)
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
-# for volunteer = ["52763", "52782"], prior_type = ["T1", "FLAIR"], recon_type = ["custom", "DICOM"], motion_type = [1, 2, 3]
-for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [3], recon_type = ["custom"]#["DICOM"]#
+# for volunteer = ["52782", "52763"], prior_type = ["T1"], recon_type = ["custom"], motion_type = [3, 2, 1]
+for volunteer = ["52782"], prior_type = ["T1"], motion_type = [3], recon_type = ["custom"]
 
     # Loading data
     experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type), "_", recon_type)
@@ -33,17 +33,14 @@ for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [3], recon_type
     nt, nk = size(K)
 
     # Multi-scale inversion schedule
-    n_scales = 2
-    # n_scales = 3
-    # n_scales = 4
+    n_scales = 3
     niter_imrecon = ones(Integer, n_scales)
     niter_parest  = ones(Integer, n_scales)
     niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
-    ε_schedule = range(0.1f0, 0.5f0; length=3)
-    # ε_schedule = [0.1f0]
+    ε_schedule = range(0.1f0, 0.8f0; length=3)
     niter_registration = 20
     nt, _ = size(K)
-    t_coarse = Float32.(range(1, nt; length=100))
+    t_coarse = Float32.(range(1, nt; length=50))
     t_fine = Float32.(1:nt)
     Ip_c2f = interpolation1d_motionpars_linop(t_coarse, t_fine)
     Ip_f2c = interpolation1d_motionpars_linop(t_fine, t_coarse)
@@ -72,8 +69,8 @@ for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [3], recon_type
         ### Optimization options: ###
 
         ## Parameter estimation
-        scaling_diagonal = 0f0
-        scaling_mean     = 1f-3
+        scaling_diagonal = 1f-3
+        scaling_mean     = 1f-4
         scaling_id       = 0f0
         Ip_c2fh = interpolation1d_motionpars_linop(t_coarse, Float32.(t_fine_h))
         opt_parest = parameter_estimation_options(; niter=niter_parest[i], steplength=1f0, λ=0f0, scaling_diagonal=scaling_diagonal, scaling_mean=scaling_mean, scaling_id=scaling_id, reg_matrix=nothing, interp_matrix=Ip_c2fh)
@@ -95,7 +92,6 @@ for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [3], recon_type
 
             # Selecting motion parameters on low-dimensional space
             θ_coarse = reshape(Ip_f2c*vec(θ), :, 6)
-            # θ_coarse .+= 1f-3*sqrt.(sum(abs.(θ_coarse).^2; dims=1)).*randn(Float32, size(θ_coarse)) ###
 
             # Joint reconstruction
             @info string("@@@ Scale = ", scale, ", regularization = ", ε_rel)
