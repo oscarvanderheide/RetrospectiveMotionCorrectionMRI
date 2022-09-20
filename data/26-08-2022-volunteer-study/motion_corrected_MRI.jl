@@ -12,7 +12,7 @@ results_folder = string(exp_folder, "results/")
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
 # for volunteer = ["52782", "52763"], prior_type = ["T1"], recon_type = ["custom"], motion_type = [3, 2, 1]
-for volunteer = ["52782"], prior_type = ["T1"], motion_type = [3], recon_type = ["custom"]
+for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [3], recon_type = ["custom"]
 
     # Loading data
     experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type), "_", recon_type)
@@ -37,24 +37,22 @@ for volunteer = ["52782"], prior_type = ["T1"], motion_type = [3], recon_type = 
     niter_imrecon = ones(Integer, n_scales)
     niter_parest  = ones(Integer, n_scales)
     niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
-    ε_schedule = range(0.1f0, 0.8f0; length=3)
+    ε_schedule = range(0.1f0, 0.5f0; length=3)
     niter_registration = 20
     nt, _ = size(K)
-    t_coarse = Float32.(range(1, nt; length=50))
-    t_fine = Float32.(1:nt)
-    Ip_c2f = interpolation1d_motionpars_linop(t_coarse, t_fine)
-    Ip_f2c = interpolation1d_motionpars_linop(t_fine, t_coarse)
 
     # Setting starting values
-    u = zeros(ComplexF32, size(X))
-    # u = deepcopy(corrupted)
+    # u = zeros(ComplexF32, size(X))
+    u = deepcopy(corrupted)
+    # u = load(string(results_folder, "results_", experiment_subname, "_best.jld"))["u"]
     θ = zeros(Float32, nt, 6)
+    # θ = load(string(results_folder, "results_", experiment_subname, "_best.jld"))["θ"]
 
     # Loop over scales
     damping_factor = nothing
     for (i, scale) in enumerate(n_scales-1:-1:0)
 
-        # Down-scaling the problem...
+        # Down-scaling the problem (spatially)...
         n_h = div.(X.nsamples, 2^scale)
         X_h = resample(X, n_h)
         K_h = subsample(K, X_h; radial=true)
@@ -64,6 +62,15 @@ for volunteer = ["52782"], prior_type = ["T1"], motion_type = [3], recon_type = 
         corrupted_h = F_h'*data_h
         prior_h = resample(prior, n_h; damping_factor=damping_factor)
         u = resample(u, n_h)
+
+        # Down-scaling the problem (temporally)...
+        (i == 1) && (nt_h = 50)
+        (i == 2) && (nt_h = 50)
+        (i == 3) && (nt_h = 50)
+        t_coarse = Float32.(range(1, nt; length=nt_h))
+        t_fine = Float32.(1:nt)
+        Ip_c2f = interpolation1d_motionpars_linop(t_coarse, t_fine)
+        Ip_f2c = interpolation1d_motionpars_linop(t_fine, t_coarse)
         t_fine_h = K_h.subindex_phase_encoding
 
         ### Optimization options: ###
