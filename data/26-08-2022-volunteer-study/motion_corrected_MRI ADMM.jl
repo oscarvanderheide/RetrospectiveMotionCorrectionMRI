@@ -12,7 +12,7 @@ results_folder = string(exp_folder, "results/")
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
 # for volunteer = ["52782", "52763"], prior_type = ["T1"], recon_type = ["custom"], motion_type = [3, 2, 1]
-for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [1], recon_type = ["custom"]
+for volunteer = ["52782"], prior_type = ["T1"], motion_type = [3], recon_type = ["custom"]
 
     # Loading data
     experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type), "_", recon_type)
@@ -37,7 +37,6 @@ for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [1], recon_type
     niter_imrecon = ones(Integer, n_scales)
     niter_parest  = ones(Integer, n_scales)
     niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
-    ε_schedule = range(0.1f0, 0.5f0; length=3)
     niter_registration = 20
     nt, _ = size(K)
 
@@ -62,8 +61,9 @@ for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [1], recon_type
         u = resample(u, n_h)
 
         # Down-scaling the problem (temporally)...
-        (prior_type == "T1")    && (nt_h = 50)
-        (prior_type == "FLAIR") && (nt_h = 200)
+        (i == 1) && (nt_h = 50)
+        (i == 2) && (nt_h = 50)
+        (i == 3) && (nt_h = 50)
         t_coarse = Float32.(range(1, nt; length=nt_h))
         t_fine = Float32.(1:nt)
         Ip_c2f = interpolation1d_motionpars_linop(t_coarse, t_fine)
@@ -81,43 +81,35 @@ for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [1], recon_type
 
         ## Image reconstruction
         h = spacing(X_h)
-        η = 1f-2*structural_maximum(prior_h; h=h)
-        P = structural_weight(prior_h; h=h, η=η, γ=0.92f0)
+        P = structural_weight(prior_h; h=h, η=1f-2, γ=1f0)
         opt_inner = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=10)
         g = gradient_norm(2, 1, n_h, h, opt_inner; weight=P, complex=true)
-        opt_imrecon(ε) = image_reconstruction_options(; prox=indicator(g ≤ ε), Lipschitz_constant=1f0, Nesterov=true, niter=niter_imrecon[i])
+        opt_imrecon = image_reconstruction_options(; prox=g, Lipschitz_constant=1f0, Nesterov=true, niter=niter_imrecon[i])
 
         ## Global
-        opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3)
+        θ_coarse = reshape(Ip_f2c*vec(θ), :, 6)
+        θ_h = reshape(Ip_c2fh*vec(θ_coarse), :, 6)
+        corrupted_h = F_h(θ_h)'*data_h
+        ρ = 1f0*g(corrupted_h)/(0.5f0*norm(data_h)^2)
+        opt = motion_correction_options_ADMM(; image_reconstruction_options=opt_imrecon, parameter_estimation_options=opt_parest, ρ=ρ, niter=niter_outloop[i], niter_estimate_Lipschitz=3)
 
         ### End optimization options ###
 
-        # Loop over smoothing factor
-        for (j, ε_rel) in enumerate(ε_schedule)
+        # Selecting motion parameters on low-dimensional space
+        θ_coarse = reshape(Ip_f2c*vec(θ), :, 6)
 
-            # Selecting motion parameters on low-dimensional space
-            θ_coarse = reshape(Ip_f2c*vec(θ), :, 6)
+        # Joint reconstruction
+        @info string("@@@ Scale = ", scale)
+        u, θ_coarse = motion_corrected_reconstruction(F_h, data_h, u, θ_coarse, opt)
+        θ .= reshape(Ip_c2f*vec(θ_coarse), :, 6)
+        θ[1:t_fine_h[1]-1,:] .= θ[t_fine_h[1]:t_fine_h[1],:]
+        θ[t_fine_h[end]+1:end,:] .= θ[t_fine_h[end]:t_fine_h[end],:]
 
-            # Joint reconstruction
-            @info string("@@@ Scale = ", scale, ", regularization = ", ε_rel)
-            θ_h = reshape(Ip_c2fh*vec(θ_coarse), :, 6)
-            corrupted_h = F_h(θ_h)'*data_h
-            ε = ε_rel*g(corrupted_h)
-            u, θ_coarse = motion_corrected_reconstruction(F_h, data_h, u, θ_coarse, opt(ε))
-
-            # Up-scaling motion parameters
-            θ .= reshape(Ip_c2f*vec(θ_coarse), :, 6)
-            n_avg = div(size(θ, 1), 10)
-            θ[1:t_fine_h[1]-1,:] .= sum(θ[t_fine_h[1]:t_fine_h[1]+n_avg-1,:]; dims=1)/n_avg
-            θ[t_fine_h[end]+1:end,:] .= sum(θ[t_fine_h[end]-n_avg+1:t_fine_h[end],:]; dims=1)/n_avg
-
-            # Plot
-            plot_volume_slices(abs.(u); spatial_geometry=X_h, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "temp.png"), orientation=orientation)
-            close("all")
-            plot_parameters(1:nt, θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "temp_motion_pars.png"))
-            close("all")
-
-        end
+        # Plot
+        plot_volume_slices(abs.(u); spatial_geometry=X_h, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "temp.png"), orientation=orientation)
+        close("all")
+        plot_parameters(1:nt, θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "temp_motion_pars.png"))
+        close("all")
 
         # Up-scaling reconstruction
         u = resample(u, X.nsamples)
@@ -129,17 +121,16 @@ for volunteer = ["52782"], prior_type = ["FLAIR"], motion_type = [1], recon_type
     opt_reg = rigid_registration_options(; T=Float32, niter=niter_registration)
     u_reg = rigid_registration(u, ground_truth, nothing, opt_reg; spatial_geometry=X)
 
-    # # Reconstruction quality
-    # ssim_recon = ssim(u_reg/norm(u_reg, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
-    # psnr_recon = psnr(u_reg/norm(u_reg, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
-    # ssim_conv = ssim(corrupted/norm(corrupted, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
-    # psnr_conv = psnr(corrupted/norm(corrupted, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
-    # @info string("@@@ Conventional reconstruction: ssim = ", ssim_conv, ", psnr = ", psnr_conv)
-    # @info string("@@@ Joint reconstruction: ssim = ", ssim_recon, ", psnr = ", psnr_recon)
+    # Reconstruction quality
+    ssim_recon = ssim(u_reg/norm(u_reg, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
+    psnr_recon = psnr(u_reg/norm(u_reg, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
+    ssim_conv = ssim(corrupted/norm(corrupted, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
+    psnr_conv = psnr(corrupted/norm(corrupted, Inf), ground_truth/norm(ground_truth, Inf); preproc=x->abs.(x))
+    @info string("@@@ Conventional reconstruction: ssim = ", ssim_conv, ", psnr = ", psnr_conv)
+    @info string("@@@ Joint reconstruction: ssim = ", ssim_recon, ", psnr = ", psnr_recon)
 
     # Save and plot results
-    # @save string(results_folder, "results_", experiment_subname, ".jld") u u_reg corrupted θ ssim_recon psnr_recon ssim_conv psnr_conv
-    @save string(results_folder, "results_", experiment_subname, ".jld") u u_reg corrupted θ
+    @save string(results_folder, "results_", experiment_subname, ".jld") u u_reg corrupted θ ssim_recon psnr_recon ssim_conv psnr_conv
     x, y, z = div.(size(ground_truth), 2).+1
     plot_slices = (VolumeSlice(1, x), VolumeSlice(2, y), VolumeSlice(3, z))
     plot_volume_slices(abs.(u_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "joint_sTV.png"), orientation=orientation)
