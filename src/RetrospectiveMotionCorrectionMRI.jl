@@ -1,6 +1,6 @@
 module RetrospectiveMotionCorrectionMRI
 
-using LinearAlgebra, AbstractLinearOperators, FastSolversForWeightedTV, ConvexOptimizationUtils, UtilitiesForMRI, Flux, ImageQualityIndexes, SparseArrays
+using LinearAlgebra, AbstractLinearOperators, FastSolversForWeightedTV, ConvexOptimizationUtils, UtilitiesForMRI, Flux, SparseArrays
 
 const RealOrComplex{T<:Real} = Union{T,Complex{T}}
 

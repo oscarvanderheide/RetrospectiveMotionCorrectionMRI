@@ -56,13 +56,18 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         interp_flag ? (Iθ = reshape(Ip*vec(θ), :, 6)) : (Iθ = θ)
         Fθu, _, Jθ = ∂(F()*u, Iθ)
 
-        # # Calibration ###
+        # Calibration ###
         # α = sum(conj(Fθu).*d; dims=2)./sum(conj(Fθu).*Fθu; dims=2) ###
-        # A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
+        r_ = Fθu-d ###
+        abs_r2_ = sum(abs.(r_).^2; dims=2)
+        λ2 = T(1e-5)*norm(sum(abs.(d).^2; dims=2), Inf) ###
+        α = T(1)./(T(1).+abs_r2_/λ2) ###
+        A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
 
         # Data misfit
         # r = A*Fθu-d ###
-        r = Fθu-d
+        r = A*r_ ###
+        # r = Fθu-d
         (~isnothing(opt.fun_history) || opt.verbose) && (fval_n = T(0.5)*norm(r)^2)
 
         # Regularization term
@@ -76,14 +81,14 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         opt.verbose && (@info string("Iter [", n, "/", opt.niter, "], fval = ", fval_n))
 
         # Compute gradient
-        # g = Jθ'*(A'*r) ###
-        g = Jθ'*r
+        g = Jθ'*(A'*r) ###
+        # g = Jθ'*r
         interp_flag && (g = reshape(Ip'*vec(g), :, 6))
         reg_flag && (g .+= opt.λ^2*reshape(D'*vec(Dθ), :, 6))
 
         # Hessian
-        H = sparse_matrix_GaussNewton(Jθ)
-        # H = sparse_matrix_GaussNewton(Jθ; W=A)
+        # H = sparse_matrix_GaussNewton(Jθ)
+        H = sparse_matrix_GaussNewton(Jθ; W=A)
         interp_flag && (H = Ip'*H*Ip)
         reg_flag && (H .+= opt.λ^2*(D'*D))
 

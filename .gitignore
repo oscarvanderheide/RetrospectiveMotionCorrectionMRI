@@ -2,6 +2,7 @@
 docs/
 *.png
 *.jld
+*.old
 Manifest.toml
 
 
