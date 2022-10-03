@@ -38,19 +38,19 @@ function motion_corrected_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::Abst
         # Image reconstruction
         opt.verbose && (@info string("--- Image reconstruction..."))
         flag_interp ? (θ_ = reshape(Ip*vec(θ), :, 6)) : (θ_ = θ); Fθ = F(θ_)
-        r_ = Fθ*u-d ###
-        abs_r2_ = sum(abs.(r_).^2; dims=2)
-        λ2 = T(1e-5)*norm(sum(abs.(d).^2; dims=2), Inf) ###
-        α = T(1)./(T(1).+abs_r2_/λ2) ###
+        # r_ = Fθ*u-d ###
+        # abs_r2_ = sum(abs.(r_).^2; dims=2)
+        # λ2 = T(1e-5)*norm(sum(abs.(d).^2; dims=2), Inf) ###
+        # α = T(1)./(T(1).+abs_r2_/λ2) ###
         # Fθu = Fθ*u ###
         # (norm(u) != T(0)) ? (α = sum(conj(Fθu).*d; dims=2)./sum(conj(Fθu).*Fθu; dims=2)) : (α = 1) ###
-        A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
-        # ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = T(1.1)*spectral_radius(Fθ*Fθ'; niter=opt.niter_estimate_Lipschitz))
-        AFθ = A*Fθ ###
-        ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = T(1.1)*spectral_radius(AFθ*AFθ'; niter=opt.niter_estimate_Lipschitz)) ###
-        # u = image_reconstruction(Fθ, d, u, opt.opt_imrecon)
+        # A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
+        ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = T(1.1)*spectral_radius(Fθ*Fθ'; niter=opt.niter_estimate_Lipschitz))
+        # AFθ = A*Fθ ###
+        # ~isnothing(opt.niter_estimate_Lipschitz) && (opt.opt_imrecon.opt.Lipschitz_constant = T(1.1)*spectral_radius(AFθ*AFθ'; niter=opt.niter_estimate_Lipschitz)) ###
+        u = image_reconstruction(Fθ, d, u, opt.opt_imrecon)
         # u = image_reconstruction(AFθ, d, u, opt.opt_imrecon) ###
-        u = image_reconstruction(AFθ, A*d, u, opt.opt_imrecon) ###
+        # u = image_reconstruction(AFθ, A*d, u, opt.opt_imrecon) ###
 
         # Motion-parameter estimation
         (n == opt.niter) && break

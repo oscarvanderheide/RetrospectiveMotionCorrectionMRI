@@ -1,6 +1,6 @@
 # Parameter estimation utilities
 
-export OptionsParameterEstimation, parameter_estimation_options, parameter_estimation, rigid_registration_options, rigid_registration
+export OptionsParameterEstimation, parameter_estimation_options, parameter_estimation
 
 
 ## Parameter-estimation options
@@ -56,18 +56,18 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         interp_flag ? (Iθ = reshape(Ip*vec(θ), :, 6)) : (Iθ = θ)
         Fθu, _, Jθ = ∂(F()*u, Iθ)
 
-        # Calibration ###
-        # α = sum(conj(Fθu).*d; dims=2)./sum(conj(Fθu).*Fθu; dims=2) ###
-        r_ = Fθu-d ###
-        abs_r2_ = sum(abs.(r_).^2; dims=2)
-        λ2 = T(1e-5)*norm(sum(abs.(d).^2; dims=2), Inf) ###
-        α = T(1)./(T(1).+abs_r2_/λ2) ###
-        A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
+        # # Calibration ###
+        # # α = sum(conj(Fθu).*d; dims=2)./sum(conj(Fθu).*Fθu; dims=2) ###
+        # r_ = Fθu-d ###
+        # abs_r2_ = sum(abs.(r_).^2; dims=2)
+        # λ2 = T(1e-5)*norm(sum(abs.(d).^2; dims=2), Inf) ###
+        # α = T(1)./(T(1).+abs_r2_/λ2) ###
+        # A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
 
         # Data misfit
         # r = A*Fθu-d ###
-        r = A*r_ ###
-        # r = Fθu-d
+        # r = A*r_ ###
+        r = Fθu-d
         (~isnothing(opt.fun_history) || opt.verbose) && (fval_n = T(0.5)*norm(r)^2)
 
         # Regularization term
@@ -81,14 +81,14 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         opt.verbose && (@info string("Iter [", n, "/", opt.niter, "], fval = ", fval_n))
 
         # Compute gradient
-        g = Jθ'*(A'*r) ###
-        # g = Jθ'*r
+        # g = Jθ'*(A'*r) ###
+        g = Jθ'*r
         interp_flag && (g = reshape(Ip'*vec(g), :, 6))
         reg_flag && (g .+= opt.λ^2*reshape(D'*vec(Dθ), :, 6))
 
         # Hessian
-        # H = sparse_matrix_GaussNewton(Jθ)
-        H = sparse_matrix_GaussNewton(Jθ; W=A)
+        H = sparse_matrix_GaussNewton(Jθ)
+        # H = sparse_matrix_GaussNewton(Jθ; W=A)
         interp_flag && (H = Ip'*H*Ip)
         reg_flag && (H .+= opt.λ^2*(D'*D))
 
@@ -117,26 +117,4 @@ function regularize_Hessian!(H::AbstractMatrix{T}; regularization_options::Union
     ΔH = spdiagm(vec(regularization_options.scaling_diagonal*diagH.+regularization_options.scaling_mean*mean_diag.+regularization_options.scaling_id))
     H .+= ΔH
     return H, ΔH
-end
-
-
-## Rigid registration
-
-rigid_registration_options(; T::DataType=Float32, niter::Integer=10, verbose::Bool=false, fun_history::Bool=false) = parameter_estimation_options(; niter=niter, steplength=T(1), λ=T(0),
-scaling_diagonal=T(0), scaling_mean=T(0), verbose=verbose, fun_history=fun_history)
-
-function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}, opt::OptionsParameterEstimation{T}; spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
-
-    # Initialize variables
-    isnothing(spatial_geometry) ? (X = UtilitiesForMRI.spatial_geometry((T(1),T(1),T(1)), size(u_moving))) : (X = spatial_geometry)
-    kx, ky, kz = k_coord(X; mesh=true)
-    K = cat(reshape(kx, 1, :, 1), reshape(ky, 1, :, 1), reshape(kz, 1, :, 1); dims=3)
-    F = nfft_linop(X, K)
-    d = F*u_fixed
-
-    # Rigid registration
-    isnothing(θ) && (θ = zeros(T, 1, 6))
-    θ = parameter_estimation(F, u_moving, d, θ, opt)
-    return F'*(F(θ)*u_moving)
-
 end

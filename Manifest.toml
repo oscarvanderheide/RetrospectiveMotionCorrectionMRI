@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.1"
+julia_version = "1.8.2"
 manifest_format = "2.0"
 project_hash = "09024724ee649a567435ab58b921595793dfcdaa"
 
@@ -12,7 +12,7 @@ version = "1.2.1"
 
 [[deps.AbstractLinearOperators]]
 deps = ["Flux", "LinearAlgebra"]
-git-tree-sha1 = "168e49b43744aac90a6806f9501e6a21a3ffce91"
+git-tree-sha1 = "682fc153718987a6d3b0f45b754b10c15e9b20e3"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/AbstractLinearOperators.git"
 uuid = "bb902dec-a34b-4f3c-9707-4856bea60ee0"
@@ -146,7 +146,7 @@ version = "1.4.1"
 
 [[deps.ConvexOptimizationUtils]]
 deps = ["AbstractLinearOperators", "Flux", "LinearAlgebra", "Roots"]
-git-tree-sha1 = "7edaa617218bc19dad6769b423e8924dbdb62cc8"
+git-tree-sha1 = "eca7d9bab6dac309ffed802d0d7361d202b4c841"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/ConvexOptimizationUtils.git"
 uuid = "9ed10759-246d-4065-822b-90d32585fe69"
@@ -158,9 +158,9 @@ uuid = "dc8bdbbb-1ca9-579f-8c36-e416f6a65cce"
 version = "1.0.2"
 
 [[deps.DataAPI]]
-git-tree-sha1 = "1106fa7e1256b402a86a8e7b15c00c85036fef49"
+git-tree-sha1 = "46d2680e618f8abd007bce0c3026cb0c4a8f2032"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
-version = "1.11.0"
+version = "1.12.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -239,7 +239,7 @@ version = "3.1.0"
 
 [[deps.FastSolversForWeightedTV]]
 deps = ["AbstractLinearOperators", "CUDA", "ConvexOptimizationUtils", "Flux", "LinearAlgebra"]
-git-tree-sha1 = "ef06d46911f86db2baabb56bfe036d5775661285"
+git-tree-sha1 = "35ca0696e195877579595a14a1e98093228933b6"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/FastSolversForWeightedTV.git"
 uuid = "3521e485-16e8-49c3-934a-dec609b578e8"
@@ -347,9 +347,9 @@ uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[deps.InverseFunctions]]
 deps = ["Test"]
-git-tree-sha1 = "b3364212fb5d870f724876ffcd34dd8ec6d98918"
+git-tree-sha1 = "49510dfcb407e572524ba94aeae2fced1f3feb0f"
 uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
-version = "0.1.7"
+version = "0.1.8"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
@@ -631,9 +631,9 @@ version = "1.3.0"
 
 [[deps.Roots]]
 deps = ["ChainRulesCore", "CommonSolve", "Printf", "Setfield"]
-git-tree-sha1 = "adeb3043370aa40360355dbc36453ac3db4c30b1"
+git-tree-sha1 = "422c880f74967af5a8db5702c6df9a03b465202e"
 uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "2.0.5"
+version = "2.0.7"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -686,9 +686,9 @@ version = "0.7.7"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "2189eb2c1f25cb3f43e5807f26aa864052e50c17"
+git-tree-sha1 = "f86b3a049e5d05227b10e15dbb315c5b90f14988"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.8"
+version = "1.5.9"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -741,7 +741,7 @@ version = "1.9.0"
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-version = "1.10.0"
+version = "1.10.1"
 
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
@@ -774,7 +774,7 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [[deps.UtilitiesForMRI]]
 deps = ["AbstractLinearOperators", "FFTW", "FINUFFT", "ImageFiltering", "LinearAlgebra", "PyPlot", "SparseArrays"]
-git-tree-sha1 = "d191bf6512b898b62b3af4a2261f9b642410a7d8"
+git-tree-sha1 = "c3eed5d52b08ec870754a9e10a46435fabc4f751"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/UtilitiesForMRI.git"
 uuid = "5f442635-cb9d-4e13-b358-1c870cfef0cf"

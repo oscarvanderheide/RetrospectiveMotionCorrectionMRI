@@ -31,14 +31,10 @@ for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3], r
 
     # Denoise prior
     X = spatial_geometry(fov, size(corrupted)); h = spacing(X)
-    opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=40)
+    opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
     g = gradient_norm(2, 1, size(prior), h, opt; complex=true)
     prior = project(prior, 0.5f0*g(prior), g)
     prior ./= norm(prior, Inf)
-
-    # Denoise ground-truth
-    reset!(opt)
-    ground_truth = project(ground_truth, 0.5f0*g(ground_truth), g)
 
     # Generating synthetic data
     K = kspace_sampling(X, permutation_dims[1:2]; phase_encode_sampling=idx_phase_encoding, readout_sampling=idx_readout)
@@ -55,7 +51,7 @@ for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3], r
     x, y, z = div.(size(ground_truth), 2).+1
     plot_slices = (VolumeSlice(1, x), VolumeSlice(2, y), VolumeSlice(3, z))
     plot_volume_slices(abs.(ground_truth); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "conventional.png"), orientation=orientation)
+    plot_volume_slices(abs.(corrupted); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted.png"), orientation=orientation)
     plot_volume_slices(abs.(prior); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(prior, Inf), savefile=string(figures_subfolder, "prior.png"), orientation=orientation)
     close("all")
 
