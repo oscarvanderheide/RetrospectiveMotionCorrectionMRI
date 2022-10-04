@@ -11,11 +11,10 @@ results_folder = string(exp_folder, "results/")
 ~isdir(results_folder) && mkdir(results_folder)
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
-for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3], recon_type = ["custom"]
-# for volunteer = ["52782"], prior_type = ["T1"], motion_type = [3], recon_type = ["custom"]
+for volunteer = ["52763"], prior_type = ["T1"], motion_type = [1], recon_type = ["custom"]
 
     # Loading data
-    experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type), "_", recon_type)
+    experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", prior_type, "_", recon_type)
     @info string("Volunteer: ", volunteer, ", motion type: ", motion_type, ", prior: ", prior_type, ", reconstruction type: ", recon_type)
     figures_subfolder = string(figures_folder, experiment_subname, "/"); ~isdir(figures_subfolder) && mkdir(figures_subfolder)
     data_file = string("data_", experiment_subname, ".jld")
@@ -42,7 +41,6 @@ for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3]
     nt, _ = size(K)
 
     # Setting starting values
-    # u = zeros(ComplexF32, size(X))
     u = deepcopy(corrupted)
     θ = zeros(Float32, nt, 6)
 
@@ -53,7 +51,6 @@ for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3]
         # Down-scaling the problem (spatially)...
         n_h = div.(X.nsamples, 2^scale)
         X_h = resample(X, n_h)
-        # K_h = subsample(K, X_h; radial=true)
         K_h = subsample(K, X_h; radial=false)
         F_h = nfft_linop(X_h, K_h)
         nt_h, _ = size(K_h)
@@ -65,8 +62,7 @@ for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3]
         nt_h = 50
         t_coarse = Float32.(range(1, nt; length=nt_h))
         t_fine = Float32.(1:nt)
-        interp = :linear
-        # interp = :nearest
+        interp = :linear# interp = :nearest
         Ip_c2f = interpolation1d_motionpars_linop(t_coarse, t_fine; interp=interp)
         Ip_f2c = interpolation1d_motionpars_linop(t_fine, t_coarse; interp=interp)
         t_fine_h = K_h.subindex_phase_encoding
@@ -83,7 +79,7 @@ for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3]
         ## Image reconstruction
         h = spacing(X_h)
         η = 1f-2*structural_maximum(prior_h; h=h)
-        P = structural_weight(prior_h; h=h, η=η, γ=0.92f0)
+        P = structural_weight(prior_h; h=h, η=η, γ=1f0)
         opt_inner = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=10)
         g = gradient_norm(2, 1, n_h, h, opt_inner; weight=P, complex=true)
         opt_imrecon(ε) = image_reconstruction_options(; prox=indicator(g ≤ ε), Lipschitz_constant=1f0, Nesterov=true, niter=niter_imrecon[i])
@@ -125,20 +121,18 @@ for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3]
 
     end
 
-    # Final rigid registration wrt ground-truth
-    @info "@@@ Final rigid registration w/ ground truth"
-    opt_reg = rigid_registration_options(; T=Float32, niter=niter_registration)
-    n = size(ground_truth)
-    u_reg = rigid_registration(u, ground_truth, nothing, opt_reg; spatial_geometry=X)
+    # Denoising ground-truth/corrupted volumes
+    @info "@@@ Rigid registeration w/ ground-truth"
     h = spacing(X)
-    opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
-    g = gradient_norm(2, 1, n, h, opt; complex=true)
-    ε = g(u)
-    u_reg = project(u_reg, ε, g); corrupted_reg = project(corrupted, ε, g); ground_truth_reg = project(ground_truth, ε, g)
+    opt_FISTA = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=10)
+    opt_reg = rigid_registration_options(; T=Float32, niter=10, verbose=false)
+    g = gradient_norm(2, 1, size(ground_truth), h, opt; complex=true); ε_reg = g(u)
+    u_reg, _ = rigid_registration(u, ground_truth, nothing, opt_reg; spatial_geometry=X, nscales=3)
+    u_reg = project(u_reg, ε_reg, g)
 
     # Reconstruction quality
-    psnr_recon = psnr(u_reg, ground_truth_reg; preproc=x->abs.(x))
-    psnr_conv = psnr(corrupted_reg, ground_truth_reg; preproc=x->abs.(x))
+    psnr_recon = psnr(u_reg, ground_truth; preproc=x->abs.(x))
+    psnr_conv = psnr(corrupted, ground_truth; preproc=x->abs.(x))
     @info string("@@@ Conventional reconstruction: psnr = ", psnr_conv)
     @info string("@@@ Joint reconstruction: psnr = ", psnr_recon)
 
@@ -147,8 +141,8 @@ for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3]
     x, y, z = div.(size(ground_truth), 2).+1
     plot_slices = (VolumeSlice(1, x), VolumeSlice(2, y), VolumeSlice(3, z))
     plot_volume_slices(abs.(u_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "joint_sTV.png"), orientation=orientation)
-    plot_volume_slices(abs.(ground_truth_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrupted.png"), orientation=orientation)
+    # plot_volume_slices(abs.(ground_truth); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
+    # plot_volume_slices(abs.(corrupted); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrupted.png"), orientation=orientation)
     plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "motion_pars.png"))
 
 end
