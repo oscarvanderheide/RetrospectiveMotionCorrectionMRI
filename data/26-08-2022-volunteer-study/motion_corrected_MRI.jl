@@ -11,11 +11,12 @@ results_folder = string(exp_folder, "results/")
 ~isdir(results_folder) && mkdir(results_folder)
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
-for volunteer = ["52763"], prior_type = ["T1"], motion_type = [2], recon_type = ["custom"]
+# for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
+for volunteer = ["52782"], prior_type = ["T1"], motion_type = [1,2,3]
 
     # Loading data
-    experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", prior_type, "_", recon_type)
-    @info string("Volunteer: ", volunteer, ", motion type: ", motion_type, ", prior: ", prior_type, ", reconstruction type: ", recon_type)
+    experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", prior_type)
+    @info string("Volunteer: ", volunteer, ", motion type: ", motion_type, ", prior: ", prior_type)
     figures_subfolder = string(figures_folder, experiment_subname, "/"); ~isdir(figures_subfolder) && mkdir(figures_subfolder)
     data_file = string("data_", experiment_subname, ".jld")
     X = load(string(data_folder, data_file))["X"]
@@ -63,10 +64,8 @@ for volunteer = ["52763"], prior_type = ["T1"], motion_type = [2], recon_type = 
         # Down-scaling the problem (temporally)...
         nt_h = 50
         t_coarse = Float32.(range(1, nt; length=nt_h))
-        # t_coarse = Float32.(range(1, nt; length=3))
         t_fine = Float32.(1:nt)
         interp = :linear
-        # interp = :nearest
         Ip_c2f = interpolation1d_motionpars_linop(t_coarse, t_fine; interp=interp)
         Ip_f2c = interpolation1d_motionpars_linop(t_fine, t_coarse; interp=interp)
         t_fine_h = K_h.subindex_phase_encoding
@@ -79,7 +78,7 @@ for volunteer = ["52763"], prior_type = ["T1"], motion_type = [2], recon_type = 
         scaling_id       = 0f0
         Ip_c2fh = interpolation1d_motionpars_linop(t_coarse, Float32.(t_fine_h); interp=interp)
         D = derivative1d_motionpars_linop(t_coarse, 1; pars=(true, true, true, true, true, true))
-        λ = sqrt(1f-6*norm(data_h)^2/spectral_radius(D'*D; niter=3))
+        λ = 1f-3*sqrt(norm(data_h)^2/spectral_radius(D'*D; niter=3))
         opt_parest = parameter_estimation_options(; niter=niter_parest[i], steplength=1f0, λ=λ, scaling_diagonal=scaling_diagonal, scaling_mean=scaling_mean, scaling_id=scaling_id, reg_matrix=D, interp_matrix=Ip_c2fh)
 
         ## Image reconstruction
@@ -128,15 +127,15 @@ for volunteer = ["52763"], prior_type = ["T1"], motion_type = [2], recon_type = 
     end
 
     # Denoising ground-truth/corrupted volumes
-    @info "@@@ Rigid registeration w/ ground-truth"
+    @info "@@@ Post-processing figures"
     h = spacing(X)
-    # opt_reg = rigid_registration_options(; T=Float32, niter=10, verbose=false)
-    # u_reg, _ = rigid_registration(u, ground_truth, nothing, opt_reg; spatial_geometry=X, nscales=3)
     opt_FISTA = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=10)
     g = gradient_norm(2, 1, size(ground_truth), h, opt_FISTA; complex=true)
     ε_reg = g(u)
+    opt_reg = rigid_registration_options(; T=Float32, niter=10, verbose=false)
+    corrupted_reg, _ = rigid_registration(corrupted, ground_truth, nothing, opt_reg; spatial_geometry=X, nscales=3)
+    corrupted_reg    = project(corrupted_reg, ε_reg, g)
     ground_truth_reg = project(ground_truth, ε_reg, g)
-    corrupted_reg    = project(corrupted, ε_reg, g)
 
     # Reconstruction quality
     psnr_recon = psnr(u, ground_truth; preproc=x->abs.(x))

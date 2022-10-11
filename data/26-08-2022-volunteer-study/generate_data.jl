@@ -10,16 +10,16 @@ figures_folder = string(exp_folder, "figures/")
 ~isdir(figures_folder) && mkdir(figures_folder)
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
-for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3], recon_type = ["custom"]
+for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
 
     # Setting files
-    experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type), "_", recon_type); @info experiment_subname
+    experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type)); @info experiment_subname
     data_file = string("data_", experiment_subname, ".jld")
     unprocessed_scans_file = string("unprocessed_scans_", experiment_subname, ".jld")
 
     # Loading unprocessed data
     # prior = load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior"]; prior ./= norm(prior, Inf)
-    prior = load(string(unprocessed_scans_folder, "registered_scans/registered_scans_", volunteer, "_prior", prior_type, "_", recon_type, ".jld"))["prior"]
+    prior = load(string(unprocessed_scans_folder, "registered_scans/registered_scans_", volunteer, "_prior", prior_type, ".jld"))["prior"]
     ground_truth = load(string(unprocessed_scans_folder, unprocessed_scans_file))["ground_truth"]
     corrupted = load(string(unprocessed_scans_folder, unprocessed_scans_file))["corrupted"]
     fov = load(string(unprocessed_scans_folder, unprocessed_scans_file))["fov"]
