@@ -3,6 +3,7 @@ docs/
 *.png
 *.jld
 *.old
+*.new
 Manifest.toml
 
 

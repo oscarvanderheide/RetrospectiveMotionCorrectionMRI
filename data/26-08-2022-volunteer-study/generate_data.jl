@@ -10,7 +10,7 @@ figures_folder = string(exp_folder, "figures/")
 ~isdir(figures_folder) && mkdir(figures_folder)
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
-for volunteer = ["52763"], prior_type = ["T1"], motion_type = [1], recon_type = ["custom"]
+for volunteer = ["52763", "52782"], prior_type = ["T1"], motion_type = [1, 2, 3], recon_type = ["custom"]
 
     # Setting files
     experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", string(prior_type), "_", recon_type); @info experiment_subname
@@ -18,9 +18,9 @@ for volunteer = ["52763"], prior_type = ["T1"], motion_type = [1], recon_type = 
     unprocessed_scans_file = string("unprocessed_scans_", experiment_subname, ".jld")
 
     # Loading unprocessed data
-    prior = load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior"]; prior ./= norm(prior, Inf)
+    # prior = load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior"]; prior ./= norm(prior, Inf)
+    prior = load(string(unprocessed_scans_folder, "registered_scans/registered_scans_", volunteer, "_prior", prior_type, "_", recon_type, ".jld"))["prior"]
     ground_truth = load(string(unprocessed_scans_folder, unprocessed_scans_file))["ground_truth"]
-    # ground_truth = load(string(data_folder, "registered_scans/ground_truth_registered_", volunteer, "_prior", prior_type, "_", recon_type, ".jld"))["ground_truth"]
     corrupted = load(string(unprocessed_scans_folder, unprocessed_scans_file))["corrupted"]
     fov = load(string(unprocessed_scans_folder, unprocessed_scans_file))["fov"]
     permutation_dims = load(string(unprocessed_scans_folder, unprocessed_scans_file))["permutation_dims"]
@@ -33,12 +33,12 @@ for volunteer = ["52763"], prior_type = ["T1"], motion_type = [1], recon_type = 
     X = spatial_geometry(fov, size(corrupted)); h = spacing(X)
     opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
     g = gradient_norm(2, 1, size(prior), h, opt; complex=true)
-    prior = project(prior, 0.5f0*g(prior), g)
+    prior = project(prior, 0.7f0*g(prior), g)
     prior ./= norm(prior, Inf)
 
-    # Denoise ground-truth/corrupted volumes
-    reset!(opt); ground_truth_reg = project(ground_truth, 0.5f0*g(ground_truth), g)
-    reset!(opt); corrupted_reg = project(corrupted, g(ground_truth_reg), g)
+    # # Denoise ground-truth/corrupted volumes
+    # reset!(opt); ground_truth_reg = project(ground_truth, 0.5f0*g(ground_truth), g)
+    # reset!(opt); corrupted_reg = project(corrupted, g(ground_truth_reg), g)
 
     # Generating synthetic data
     K = kspace_sampling(X, permutation_dims[1:2]; phase_encode_sampling=idx_phase_encoding, readout_sampling=idx_readout)
@@ -54,8 +54,8 @@ for volunteer = ["52763"], prior_type = ["T1"], motion_type = [1], recon_type = 
     ~isdir(figures_subfolder) && mkdir(figures_subfolder)
     x, y, z = div.(size(ground_truth), 2).+1
     plot_slices = (VolumeSlice(1, x), VolumeSlice(2, y), VolumeSlice(3, z))
-    plot_volume_slices(abs.(ground_truth_reg); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted_reg); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted.png"), orientation=orientation)
+    plot_volume_slices(abs.(ground_truth); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
+    plot_volume_slices(abs.(corrupted); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted.png"), orientation=orientation)
     plot_volume_slices(abs.(prior); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(prior, Inf), savefile=string(figures_subfolder, "prior.png"), orientation=orientation)
     close("all")
 
