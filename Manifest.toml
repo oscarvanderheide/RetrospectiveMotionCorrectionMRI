@@ -219,6 +219,18 @@ version = "0.1.2"
 deps = ["Mmap"]
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
+[[deps.Dierckx]]
+deps = ["Dierckx_jll"]
+git-tree-sha1 = "633c119fcfddf61fb4c75d77ce3ebab552a44723"
+uuid = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
+version = "0.5.2"
+
+[[deps.Dierckx_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "6596b96fe1caff3db36415eeb6e9d3b50bfe40ee"
+uuid = "cd4c43a9-7502-52ba-aa6d-59fb2a88580b"
+version = "0.1.0+0"
+
 [[deps.DiffResults]]
 deps = ["StaticArraysCore"]
 git-tree-sha1 = "782dd5f4561f5d267313f23853baaaa4c52ea621"
@@ -599,9 +611,9 @@ version = "1.2.0"
 
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "1ea784113a6aa054c5ebd95945fa5e52c2f378e7"
+git-tree-sha1 = "f71d8950b724e9ff6110fc948dff5a329f901d64"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.12.7"
+version = "1.12.8"
 
 [[deps.OneHotArrays]]
 deps = ["Adapt", "ChainRulesCore", "GPUArrays", "LinearAlgebra", "MLUtils", "NNlib"]
@@ -725,9 +737,9 @@ version = "1.3.0"
 
 [[deps.Roots]]
 deps = ["ChainRulesCore", "CommonSolve", "Printf", "Setfield"]
-git-tree-sha1 = "422c880f74967af5a8db5702c6df9a03b465202e"
+git-tree-sha1 = "a3db467ce768343235032a1ca0830fc64158dadf"
 uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "2.0.7"
+version = "2.0.8"
 
 [[deps.SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -834,9 +846,9 @@ version = "1.0.1"
 
 [[deps.Tables]]
 deps = ["DataAPI", "DataValueInterfaces", "IteratorInterfaceExtensions", "LinearAlgebra", "OrderedCollections", "TableTraits", "Test"]
-git-tree-sha1 = "2d7164f7b8a066bcfa6224e67736ce0eb54aef5b"
+git-tree-sha1 = "c79322d36826aa2f4fd8ecfa96ddb47b174ac78d"
 uuid = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
-version = "1.9.0"
+version = "1.10.0"
 
 [[deps.Tar]]
 deps = ["ArgTools", "SHA"]
@@ -879,8 +891,8 @@ uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [[deps.UtilitiesForMRI]]
-deps = ["AbstractLinearOperators", "FFTW", "FINUFFT", "ImageFiltering", "LinearAlgebra", "PyPlot", "SparseArrays"]
-git-tree-sha1 = "c3eed5d52b08ec870754a9e10a46435fabc4f751"
+deps = ["AbstractLinearOperators", "Dierckx", "FFTW", "FINUFFT", "ImageFiltering", "LinearAlgebra", "PyPlot", "SparseArrays"]
+git-tree-sha1 = "c3a8e04bfd4618285b6e33deb1bf034f480bf8e9"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/UtilitiesForMRI.git"
 uuid = "5f442635-cb9d-4e13-b358-1c870cfef0cf"
