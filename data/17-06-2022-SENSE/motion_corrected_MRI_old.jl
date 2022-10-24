@@ -1,7 +1,7 @@
 using LinearAlgebra, RetrospectiveMotionCorrectionMRI, ConvexOptimizationUtils, FastSolversForWeightedTV, UtilitiesForMRI, PyPlot, JLD
 
 # Experiment name/type
-experiment_name = "17-06-2022_SENSE"; @info string(experiment_name, "\n")
+experiment_name = "17-06-2022-SENSE"; @info string(experiment_name, "\n")
 
 # Setting folder/savefiles
 data_folder    = string(pwd(), "/data/", experiment_name, "/")
