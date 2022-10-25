@@ -16,7 +16,7 @@ for recon_type = ["custom", "DICOM"]
     unprocessed_scans_file = string("unprocessed_scans_", recon_type, ".jld")
 
     # Loading unprocessed data
-    prior = abs.(load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior"]).+0*im; prior ./= norm(prior, Inf)
+    prior = load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior"]; prior ./= norm(prior, Inf)
     ground_truth = load(string(unprocessed_scans_folder, unprocessed_scans_file))["ground_truth"]
     corrupted = load(string(unprocessed_scans_folder, unprocessed_scans_file))["corrupted"]
     fov = load(string(unprocessed_scans_folder, unprocessed_scans_file))["fov"]
@@ -28,7 +28,7 @@ for recon_type = ["custom", "DICOM"]
     X = spatial_geometry(fov, size(corrupted)); h = spacing(X)
     opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
     g = gradient_norm(2, 1, size(prior), h, opt; complex=true)
-    prior = project(prior, 0.5f0*g(prior), g)
+    prior = project(prior, 0.8f0*g(prior), g)
     prior ./= norm(prior, Inf)
 
     # Generating synthetic data
@@ -46,9 +46,9 @@ for recon_type = ["custom", "DICOM"]
     vmin = 0f0; vmax = maximum(abs.(ground_truth))
     x, y, z = div.(size(ground_truth), 2).+1
     plot_slices = (VolumeSlice(1, x), VolumeSlice(2, y), VolumeSlice(3, z))
-    plot_volume_slices(abs.(ground_truth); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "conventional.png"), orientation=orientation)
-    plot_volume_slices(abs.(prior); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(prior, Inf), savefile=string(figures_subfolder, "prior.png"), orientation=orientation)
+    plot_volume_slices(abs.(ground_truth); spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
+    plot_volume_slices(abs.(corrupted); spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted.png"), orientation=orientation)
+    plot_volume_slices(abs.(prior); spatial_geometry=X, vmin=0, vmax=norm(prior, Inf), savefile=string(figures_subfolder, "prior.png"), orientation=orientation)
     close("all")
 
 end
