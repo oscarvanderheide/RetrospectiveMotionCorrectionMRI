@@ -25,7 +25,7 @@ u_conventional = F'*d
 # Image reconstruction options
 h = spacing(X); LD = 4f0*sum(1 ./h.^2)
 opt_inner = FISTA_optimizer(LD; Nesterov=true, niter=10)
-g = gradient_norm(2, 1, size(ground_truth), h, opt_inner; complex=true)
+g = gradient_norm(2, 1, size(ground_truth), h; complex=true, optimizer=opt_inner)
 ε = 0.8f0*g(ground_truth)
 h = indicator(g ≤ ε)
 opt_imrecon = image_reconstruction_options(; prox=h, Lipschitz_constant=1f0, Nesterov=true, niter=5, verbose=true, fun_history=true)
@@ -36,16 +36,17 @@ ti = Float32.(range(1, nt; length=16))
 t = Float32.(1:nt)
 Ip = interpolation1d_motionpars_linop(ti, t)
 D = derivative1d_motionpars_linop(t, 2; pars=(true, true, true, true, true, true))/4f0
-opt_parest = parameter_estimation_options(; niter=5, steplength=1f0, λ=0f0, cdiag=1f-5, cid=1f-1, reg_matrix=D, interp_matrix=Ip, verbose=true, fun_history=true)
+opt_parest = parameter_estimation_options(; niter=5, steplength=1f0, λ=0f0, scaling_diagonal=1f-5, scaling_id=1f-1, reg_matrix=D, interp_matrix=Ip, verbose=true, fun_history=true)
 
 # Solution
 opt = motion_correction_options(; image_reconstruction_options=opt_imrecon, parameter_estimation_options=opt_parest, niter=40, niter_estimate_Lipschitz=3, verbose=true, fun_history=true)
-θ0 = zeros(Float32, size(Ip,2))
+θ0 = zeros(Float32, length(ti), 6)
 u0 = zeros(ComplexF32, n)
-u, θ = motion_corrected_reconstruction(F, d, u0, θ0, opt)
+u, θ = motion_corrected_reconstruction(F, d, u0, θ0; options=opt)
 θ = reshape(Ip*vec(θ), length(t), 6)
 
 # Comparison
 u_conventional = F'*d
-@info string("Conventional: (psnr,ssim)=(", psnr(u_conventional, ground_truth; preproc=x->abs.(x)), ",", ssim(u_conventional, ground_truth; preproc=x->abs.(x)),")")
-@info string("Motion-corrected: (psnr,ssim)=(", psnr(u, ground_truth; preproc=x->abs.(x)), ",", ssim(u, ground_truth; preproc=x->abs.(x)))
+α = norm(ground_truth, Inf)
+@info string("Conventional: (psnr,ssim)=(", psnr(abs.(u_conventional)/α, abs.(ground_truth)/α), ",", ssim(abs.(u_conventional)/α, abs.(ground_truth)/α),")")
+@info string("Motion-corrected: (psnr,ssim)=(", psnr(abs.(u)/α, abs.(ground_truth)/α), ",", ssim(abs.(u)/α, abs.(ground_truth)/α))

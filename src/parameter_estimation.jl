@@ -34,67 +34,55 @@ function parameter_estimation_options(; niter::Integer=10,
     return OptionsParameterEstimation(niter, steplength, λ, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, HessianRegularizationParameters(scaling_diagonal, scaling_mean, scaling_id), verbose, fval)
 end
 
-ConvexOptimizationUtils.fun_history(opt::OptionsParameterEstimation) = opt.fun_history
+ConvexOptimizationUtils.fun_history(options::OptionsParameterEstimation) = options.fun_history
 
-ConvexOptimizationUtils.reset!(opt::OptionsParameterEstimation) = (~isnothing(opt.fun_history) && (opt.fun_history .= 0); return opt)
+ConvexOptimizationUtils.reset!(options::OptionsParameterEstimation) = (~isnothing(options.fun_history) && (options.fun_history .= 0); return options)
 
 
 ## Parameter-estimation algorithms
 
-function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T,2}, opt::OptionsParameterEstimation{T}) where {T<:Real,CT<:RealOrComplex{T}}
+function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}; options::Union{Nothing,OptionsParameterEstimation{T}}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
-    reset!(opt)
+    reset!(options)
     θ = deepcopy(initial_estimate)
-    interp_flag = ~isnothing(opt.interp_matrix); interp_flag && (Ip = opt.interp_matrix)
-    reg_flag    = ~isnothing(opt.reg_matrix) && (opt.λ != T(0)); reg_flag && (D = opt.reg_matrix)
+    interp_flag = ~isnothing(options.interp_matrix); interp_flag && (Ip = options.interp_matrix)
+    reg_flag    = ~isnothing(options.reg_matrix) && (options.λ != T(0)); reg_flag && (D = options.reg_matrix)
 
     # Iterative solution
-    @inbounds for n = 1:opt.niter
+    @inbounds for n = 1:options.niter
 
         # Evaluate forward operator
         interp_flag ? (Iθ = reshape(Ip*vec(θ), :, 6)) : (Iθ = θ)
         Fθu, _, Jθ = ∂(F()*u, Iθ)
 
-        # # Calibration ###
-        # # α = sum(conj(Fθu).*d; dims=2)./sum(conj(Fθu).*Fθu; dims=2) ###
-        # r_ = Fθu-d ###
-        # abs_r2_ = sum(abs.(r_).^2; dims=2)
-        # λ2 = T(1e-5)*norm(sum(abs.(d).^2; dims=2), Inf) ###
-        # α = T(1)./(T(1).+abs_r2_/λ2) ###
-        # A = linear_operator(CT, size(d), size(d), d->α.*d, d->conj(α).*d) ###
-
         # Data misfit
-        # r = A*Fθu-d ###
-        # r = A*r_ ###
         r = Fθu-d
-        (~isnothing(opt.fun_history) || opt.verbose) && (fval_n = T(0.5)*norm(r)^2)
+        (~isnothing(options.fun_history) || options.verbose) && (fval_n = T(0.5)*norm(r)^2)
 
         # Regularization term
         if reg_flag
             Dθ = reshape(D*vec(θ), :, 6)
-            (~isnothing(opt.fun_history) || opt.verbose) && (fval_n += T(0.5)*opt.λ^2*norm(Dθ)^2)
+            (~isnothing(options.fun_history) || options.verbose) && (fval_n += T(0.5)*options.λ^2*norm(Dθ)^2)
         end
 
         # Print message
-        ~isnothing(opt.fun_history) && (opt.fun_history[n] = fval_n)
-        opt.verbose && (@info string("Iter [", n, "/", opt.niter, "], fval = ", fval_n))
+        ~isnothing(options.fun_history) && (options.fun_history[n] = fval_n)
+        options.verbose && (@info string("Iter [", n, "/", options.niter, "], fval = ", fval_n))
 
         # Compute gradient
-        # g = Jθ'*(A'*r) ###
         g = Jθ'*r
         interp_flag && (g = reshape(Ip'*vec(g), :, 6))
-        reg_flag && (g .+= opt.λ^2*reshape(D'*vec(Dθ), :, 6))
+        reg_flag && (g .+= options.λ^2*reshape(D'*vec(Dθ), :, 6))
 
         # Hessian
         H = sparse_matrix_GaussNewton(Jθ)
-        # H = sparse_matrix_GaussNewton(Jθ; W=A)
         interp_flag && (H = Ip'*H*Ip)
-        reg_flag && (H .+= opt.λ^2*(D'*D))
+        reg_flag && (H .+= options.λ^2*(D'*D))
 
         # Marquardt-Levenberg regularization
-        if ~isnothing(opt.reg_Hessian)
-            H, ΔH = regularize_Hessian!(H; regularization_options=opt.reg_Hessian)
+        if ~isnothing(options.reg_Hessian)
+            H, ΔH = regularize_Hessian!(H; regularization_options=options.reg_Hessian)
             g .+= reshape(ΔH*vec(θ), :, 6) # consistency correction
         end
 
@@ -102,7 +90,7 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         g = reshape(lu(H)\vec(g), :, 6)
 
         # Update
-        θ .-= opt.steplength*g
+        θ .-= options.steplength*g
 
     end
 

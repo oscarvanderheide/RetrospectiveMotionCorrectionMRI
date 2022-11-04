@@ -31,13 +31,13 @@ D = derivative1d_motionpars_linop(t, 2; pars=(true, true, true, true, true, true
 opt = parameter_estimation_options(; niter=10,
                                      steplength=1f0,
                                      λ=0f0,
-                                     cdiag=1f-5, cid=1f-1,
+                                     scaling_diagonal=1f-5, scaling_id=1f-1,
                                      reg_matrix=D,
                                      interp_matrix=Ip,
                                      verbose=true,
                                      fun_history=true)
 
 # Solution
-θ0 = zeros(Float32, length(ti)*6)
-θ_sol = parameter_estimation(F, ground_truth, d, θ0, opt)
+θ0 = zeros(Float32, length(ti), 6)
+θ_sol = parameter_estimation(F, ground_truth, d, θ0; options=opt)
 θ_sol_p = reshape(Ip*vec(θ_sol), length(t), 6)

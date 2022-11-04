@@ -22,7 +22,7 @@ nt, _ = size(K)
 u = F'*(F(θ)*ground_truth)
 
 # Optimization options
-opt = rigid_registration_options(; T=Float32, niter=100, verbose=true, fun_history=true)
+opt = rigid_registration_options(; T=Float32, niter=10, verbose=true, fun_history=true)
 
 # Solution
-u_ = rigid_registration(ground_truth, u, nothing, opt; spatial_geometry=X)
+u_ = rigid_registration(ground_truth, u, nothing; options=opt, spatial_geometry=X, nscales=2)
