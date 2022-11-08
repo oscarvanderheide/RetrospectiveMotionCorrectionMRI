@@ -11,31 +11,31 @@ results_folder = string(exp_folder, "results/")
 ~isdir(results_folder) && mkdir(results_folder)
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
-for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
+# for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
 # for volunteer = ["52782"], prior_type = ["T1"], motion_type = [1,2,3]
-# for volunteer = ["52763"], prior_type = ["T1"], motion_type = [2]
+for volunteer = ["52763"], prior_type = ["T1"], motion_type = [3]
 
     # Loading data
-    experiment_subname = string(volunteer, "_motion", string(motion_type), "_prior", prior_type)
+    experiment_subname = string(volunteer, "_prior", prior_type)
     @info string("Volunteer: ", volunteer, ", motion type: ", motion_type, ", prior: ", prior_type)
     figures_subfolder = string(figures_folder, experiment_subname, "/"); ~isdir(figures_subfolder) && mkdir(figures_subfolder)
     data_file = string("data_", experiment_subname, ".jld")
     X = load(string(data_folder, data_file))["X"]
     K = load(string(data_folder, data_file))["K"]
-    data = load(string(data_folder, data_file))["data"]
+    data = load(string(data_folder, data_file))[string("data_motion", motion_type)]
     prior = load(string(data_folder, data_file))["prior"]
     ground_truth = load(string(data_folder, data_file))["ground_truth"]
-    corrupted = load(string(data_folder, data_file))["corrupted"]
+    corrupted = load(string(data_folder, data_file))[string("corrupted_motion", motion_type)]
     vmin = 0f0; vmax = maximum(abs.(ground_truth))
     orientation = load(string(data_folder, data_file))["orientation"]
+    mask = load(string(data_folder, data_file))["mask"]
 
     # Setting Fourier operator
     F = nfft_linop(X, K)
     nt, nk = size(K)
 
     # Multi-scale inversion schedule
-    # n_scales = 4
-    n_scales = 3
+    n_scales = 4
     niter_imrecon = ones(Integer, n_scales)
     niter_parest  = ones(Integer, n_scales)
     niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
@@ -62,6 +62,7 @@ for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
         data_h = subsample(K, data, K_h; norm_constant=F.norm_constant/F_h.norm_constant, damping_factor=damping_factor)
         prior_h = resample(prior, n_h; damping_factor=damping_factor)
         ground_truth_h = resample(ground_truth, n_h; damping_factor=damping_factor)
+        mask_h = resample(mask, n_h)
         u = resample(u, n_h)
 
         # Down-scaling the problem (temporally)...
@@ -87,12 +88,14 @@ for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
 
         ## Image reconstruction
         h = spacing(X_h)
-        # η = 1f-2*structural_maximum(prior_h; h=h)
-        # P = structural_weight(prior_h; h=h, η=η, γ=1f0)
-        P = nothing
+        η = 1f-2*structural_maximum(prior_h; h=h)
+        P = structural_weight(prior_h; h=h, η=η, γ=1f0)
+        # P = nothing
         opt_inner = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=10)
-        g = gradient_norm(2, 1, n_h, h, opt_inner; weight=P, complex=true)
-        opt_imrecon(ε) = image_reconstruction_options(; prox=indicator(g ≤ ε), Lipschitz_constant=1f0, Nesterov=true, niter=niter_imrecon[i])
+        C0 = zero_set(ComplexF32, (!).(mask_h))
+        g = gradient_norm(2, 1, n_h, h; weight=P, complex=true, optimizer=opt_inner)
+        g1 = g+indicator(C0)
+        opt_imrecon(ε) = image_reconstruction_options(; prox=indicator(g1 ≤ ε), Lipschitz_constant=1f0, Nesterov=true, niter=niter_imrecon[i])
 
         ## Global
         opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3)
@@ -110,9 +113,9 @@ for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
             @info string("@@@ Scale = ", scale, ", regularization = ", ε_rel)
             θ_h = reshape(Ip_c2fh*vec(θ_coarse), :, 6)
             corrupted_h = F_h(θ_h)'*data_h
-            # ε = ε_rel*g(corrupted_h)
-            ε = ε_rel*g(ground_truth_h)
-            u, θ_coarse = motion_corrected_reconstruction(F_h, data_h, u, θ_coarse, opt(ε))
+            ε = ε_rel*g(corrupted_h)
+            u, θ_coarse = motion_corrected_reconstruction(F_h, data_h, u, θ_coarse; options=opt(ε))
+            u .= project(u, C0)
 
             # Up-scaling motion parameters
             θ .= reshape(Ip_c2f*vec(θ_coarse), :, 6)
@@ -137,27 +140,30 @@ for volunteer = ["52763","52782"], prior_type = ["T1"], motion_type = [1,2,3]
     @info "@@@ Post-processing figures"
     h = spacing(X)
     opt_FISTA = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=10)
-    g = gradient_norm(2, 1, size(ground_truth), h, opt_FISTA; complex=true)
+    g = gradient_norm(2, 1, size(ground_truth), h; complex=true, optimizer=opt_FISTA)
     ε_reg = 0.8f0*g(ground_truth)
     corrupted_reg    = project(corrupted, ε_reg, g)
     ground_truth_reg = project(ground_truth, ε_reg, g)
-    opt_reg = rigid_registration_options(; T=Float32, niter=10, verbose=false)
-    u_reg, _ = rigid_registration(u, ground_truth_reg, nothing, opt_reg; spatial_geometry=X, nscales=3)
-    corrupted_reg, _ = rigid_registration(corrupted_reg, ground_truth_reg, nothing, opt_reg; spatial_geometry=X, nscales=3)
+    opt_reg = rigid_registration_options(; T=Float32, niter=niter_registration, verbose=false)
+    u_reg, _ = rigid_registration(u, ground_truth_reg, nothing; options=opt_reg, spatial_geometry=X, nscales=3)
+    corrupted_reg, _ = rigid_registration(corrupted_reg, ground_truth_reg, nothing; options=opt_reg, spatial_geometry=X, nscales=3)
 
     # Reconstruction quality
-    psnr_recon = psnr(u_reg, ground_truth_reg; preproc=x->abs.(x))
-    psnr_conv = psnr(corrupted_reg, ground_truth_reg; preproc=x->abs.(x))
-    @info string("@@@ Conventional reconstruction: psnr = ", psnr_conv)
-    @info string("@@@ Joint reconstruction: psnr = ", psnr_recon)
+    fact = norm(ground_truth_reg, Inf)
+    psnr_recon = psnr(abs.(u_reg)/fact, abs.(ground_truth_reg)/fact)
+    psnr_conv = psnr(abs.(corrupted_reg)/fact, abs.(ground_truth_reg)/fact)
+    ssim_recon = ssim(abs.(u_reg)/fact, abs.(ground_truth_reg)/fact)
+    ssim_conv = ssim(abs.(corrupted_reg)/fact, abs.(ground_truth_reg)/fact)
+    @info string("@@@ Conventional reconstruction: psnr = ", psnr_conv, ", ssim = ", ssim_conv)
+    @info string("@@@ Joint reconstruction: psnr = ", psnr_recon, ", ssim = ", ssim_recon)
 
     # Save and plot results
-    @save string(results_folder, "results_", experiment_subname, ".jld") u u_reg θ psnr_recon psnr_conv
+    @save string(results_folder, "results_", experiment_subname, "_motion", motion_type, ".jld") u u_reg θ psnr_recon psnr_conv ssim_recon ssim_conv
     x, y, z = div.(size(ground_truth), 2).+1
     plot_slices = (VolumeSlice(1, x), VolumeSlice(2, y), VolumeSlice(3, z))
-    plot_volume_slices(abs.(u_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "joint_sTV.png"), orientation=orientation)
+    plot_volume_slices(abs.(u_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrected_motion", string(motion_type), ".png"), orientation=orientation)
     plot_volume_slices(abs.(ground_truth_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "ground_truth_reg.png"), orientation=orientation)
     plot_volume_slices(abs.(corrupted_reg); slices=plot_slices, spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrupted_reg.png"), orientation=orientation)
-    plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "motion_pars.png"))
+    plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "parameters_motion", string(motion_type), ".png"))
 
 end
