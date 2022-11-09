@@ -24,8 +24,8 @@ dnoise = d+noise
 
 # Image reconstruction options
 h = spacing(X); LD = 4f0*sum(1 ./h.^2)
-opt_inner = FISTA_optimizer(LD; Nesterov=true, niter=20)
-g = gradient_norm(2, 1, size(ground_truth), h; complex=true, optimizer=opt_inner)
+opt_inner = FISTA(LD; Nesterov=true, niter=20)
+g = gradient_norm(2, 1, size(ground_truth), h; complex=true)
 ε = g(ground_truth)
 h = indicator(g ≤ ε)
 L = 1.1f0*spectral_radius(F'*F; niter=3)
@@ -37,5 +37,5 @@ u = image_reconstruction(F, dnoise, u0; options=opt)
 
 # Coherence test w/ minimize
 reset!(opt)
-u_ = minimize(leastsquares_misfit(F, dnoise)+h, u0, opt.optimizer)
+u_ = argmin(leastsquares_misfit(F, dnoise)+h, u0, opt.optimizer)
 @test u ≈ u_

@@ -36,15 +36,12 @@ end
 
 ConvexOptimizationUtils.fun_history(options::OptionsParameterEstimation) = options.fun_history
 
-ConvexOptimizationUtils.reset!(options::OptionsParameterEstimation) = (~isnothing(options.fun_history) && (options.fun_history .= 0); return options)
-
 
 ## Parameter-estimation algorithms
 
 function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}; options::Union{Nothing,OptionsParameterEstimation{T}}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
-    reset!(options)
     θ = deepcopy(initial_estimate)
     interp_flag = ~isnothing(options.interp_matrix); interp_flag && (Ip = options.interp_matrix)
     reg_flag    = ~isnothing(options.reg_matrix) && (options.λ != T(0)); reg_flag && (D = options.reg_matrix)
