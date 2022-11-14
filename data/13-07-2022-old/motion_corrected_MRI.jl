@@ -1,4 +1,4 @@
-using LinearAlgebra, RetrospectiveMotionCorrectionMRI, ConvexOptimizationUtils, FastSolversForWeightedTV, UtilitiesForMRI, PyPlot, JLD
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, AbstractProximableFunctions, FastSolversForWeightedTV, UtilitiesForMRI, PyPlot, JLD
 
 # Experiment name/type
 experiment_name = "13-07-2022"; @info string(experiment_name, "\n")

@@ -1,4 +1,4 @@
-using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, ConvexOptimizationUtils, LinearAlgebra, Test
+using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, AbstractProximableFunctions, LinearAlgebra, Test
 
 # Spatial geometry
 fov = (1f0, 2f0, 2f0)
@@ -24,8 +24,8 @@ dnoise = d+noise
 
 # Image reconstruction options
 h = spacing(X); LD = 4f0*sum(1 ./h.^2)
-opt_inner = FISTA(LD; Nesterov=true, niter=20)
-g = gradient_norm(2, 1, size(ground_truth), h; complex=true)
+opt_inner = FISTA_options(LD; Nesterov=true, niter=20)
+g = gradient_norm(2, 1, size(ground_truth), h; complex=true, options=opt_inner)
 ε = g(ground_truth)
 h = indicator(g ≤ ε)
 L = 1.1f0*spectral_radius(F'*F; niter=3)

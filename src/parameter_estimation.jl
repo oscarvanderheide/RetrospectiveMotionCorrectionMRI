@@ -5,21 +5,21 @@ export OptionsParameterEstimation, parameter_estimation_options, parameter_estim
 
 ## Parameter-estimation options
 
-mutable struct HessianRegularizationParameters{T<:Real}
-    scaling_diagonal::T
-    scaling_mean::T
-    scaling_id::T
+mutable struct HessianRegularizationParameters
+    scaling_diagonal::Real
+    scaling_mean::Real
+    scaling_id::Real
 end
 
-mutable struct OptionsParameterEstimation{T<:Real}
+mutable struct OptionsParameterEstimation
     niter::Integer
-    steplength::T
-    λ::T
-    reg_matrix::Union{Nothing,AbstractMatrix{T}}
-    interp_matrix::Union{Nothing,AbstractMatrix{T}}
-    reg_Hessian::HessianRegularizationParameters{T}
+    steplength::Real
+    λ::Real
+    reg_matrix::Union{Nothing,AbstractMatrix}
+    interp_matrix::Union{Nothing,AbstractMatrix}
+    reg_Hessian::HessianRegularizationParameters
     verbose::Bool
-    fun_history::Union{Nothing,AbstractVector{T}}
+    fun_history::Union{Nothing,AbstractVector}
 end
 
 function parameter_estimation_options(; niter::Integer=10,
@@ -34,12 +34,12 @@ function parameter_estimation_options(; niter::Integer=10,
     return OptionsParameterEstimation(niter, steplength, λ, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, HessianRegularizationParameters(scaling_diagonal, scaling_mean, scaling_id), verbose, fval)
 end
 
-ConvexOptimizationUtils.fun_history(options::OptionsParameterEstimation) = options.fun_history
+AbstractProximableFunctions.fun_history(options::OptionsParameterEstimation) = options.fun_history
 
 
 ## Parameter-estimation algorithms
 
-function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}; options::Union{Nothing,OptionsParameterEstimation{T}}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
+function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}; options::Union{Nothing,OptionsParameterEstimation}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
     θ = deepcopy(initial_estimate)
@@ -87,7 +87,7 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         g = reshape(lu(H)\vec(g), :, 6)
 
         # Update
-        θ .-= options.steplength*g
+        θ .-= T(options.steplength)*g
 
     end
 
@@ -95,11 +95,11 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
 
 end
 
-function regularize_Hessian!(H::AbstractMatrix{T}; regularization_options::Union{Nothing,HessianRegularizationParameters{T}}=nothing) where {T<:Real}
+function regularize_Hessian!(H::AbstractMatrix{T}; regularization_options::Union{Nothing,HessianRegularizationParameters}=nothing) where {T<:Real}
     isnothing(regularization_options) && (return (H, nothing))
     diagH = reshape(diag(H), :, 6)
     mean_diag = sum(diagH; dims=1)/size(diagH, 1)
-    ΔH = spdiagm(vec(regularization_options.scaling_diagonal*diagH.+regularization_options.scaling_mean*mean_diag.+regularization_options.scaling_id))
+    ΔH = spdiagm(vec(T(regularization_options.scaling_diagonal)*diagH.+T(regularization_options.scaling_mean)*mean_diag.+T(regularization_options.scaling_id)))
     H .+= ΔH
     return H, ΔH
 end

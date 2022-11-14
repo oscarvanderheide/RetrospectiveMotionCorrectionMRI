@@ -3,10 +3,10 @@
 export rigid_registration_options, rigid_registration
 
 
-rigid_registration_options(; T::DataType=Float32, niter::Integer=10, verbose::Bool=false, fun_history::Bool=false) = parameter_estimation_options(; niter=niter, steplength=T(1), λ=T(0),
-scaling_diagonal=T(0), scaling_mean=T(0), verbose=verbose, fun_history=fun_history)
+rigid_registration_options(; niter::Integer=10, verbose::Bool=false, fun_history::Bool=false) = parameter_estimation_options(; niter=niter, steplength=1.0, λ=0.0,
+scaling_diagonal=0.0, scaling_mean=0.0, verbose=verbose, fun_history=fun_history)
 
-function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}; options::Union{Nothing,OptionsParameterEstimation{T}}=nothing, spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing, nscales::Integer=1) where {T<:Real,CT<:RealOrComplex{T}}
+function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}; options::Union{Nothing,OptionsParameterEstimation}=nothing, spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing, nscales::Integer=1) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
     isnothing(spatial_geometry) ? (X = UtilitiesForMRI.spatial_geometry((T(1),T(1),T(1)), size(u_moving))) : (X = spatial_geometry)

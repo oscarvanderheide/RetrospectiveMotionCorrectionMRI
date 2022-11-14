@@ -1,4 +1,4 @@
-using LinearAlgebra, RetrospectiveMotionCorrectionMRI, ConvexOptimizationUtils, UtilitiesForMRI,  FastSolversForWeightedTV, PyPlot, JLD
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, AbstractProximableFunctions, UtilitiesForMRI,  FastSolversForWeightedTV, PyPlot, JLD
 
 # Folders
 experiment_name = "17-06-2022-SENSE"; @info experiment_name

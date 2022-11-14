@@ -5,7 +5,7 @@ version = "0.1.0"
 
 [deps]
 AbstractLinearOperators = "bb902dec-a34b-4f3c-9707-4856bea60ee0"
-ConvexOptimizationUtils = "9ed10759-246d-4065-822b-90d32585fe69"
+AbstractProximableFunctions = "9ed10759-246d-4065-822b-90d32585fe69"
 FastSolversForWeightedTV = "3521e485-16e8-49c3-934a-dec609b578e8"
 ImageQualityIndexes = "2996bd0c-7a13-11e9-2da2-2f5ce47296a9"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"

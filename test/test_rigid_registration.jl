@@ -1,4 +1,4 @@
-using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, ConvexOptimizationUtils, LinearAlgebra, Test
+using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, AbstractProximableFunctions, LinearAlgebra, Test
 
 # Spatial geometry
 fov = (1f0, 2f0, 2f0)
@@ -22,7 +22,9 @@ nt, _ = size(K)
 u = F'*(F(θ)*ground_truth)
 
 # Optimization options
-opt = rigid_registration_options(; T=Float32, niter=10, verbose=true, fun_history=true)
+opt = rigid_registration_options(; niter=10, verbose=true, fun_history=true)
 
 # Solution
-u_ = rigid_registration(ground_truth, u, nothing; options=opt, spatial_geometry=X, nscales=2)
+u_, θ_ = rigid_registration(ground_truth, u, nothing; options=opt, spatial_geometry=X, nscales=2)
+@test θ[1:1,:] ≈ θ_ rtol=1f-3
+@test u ≈ u_ rtol=1f-3
