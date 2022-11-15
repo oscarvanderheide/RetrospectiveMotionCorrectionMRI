@@ -42,7 +42,7 @@ struct_prior ? (P = structural_weight(prior; η=η)) : (P = nothing)
 g = gradient_norm(2, 1, size(u_conventional), (1f0,1f0,1f0); weight=P, T=ComplexF32)
 ε = 0.8f0*g(u_conventional)
 opt_proj = opt_fista(1f0/12f0; niter=10, Nesterov=true)
-prox(u, _) = project(u, ε, g, opt_proj)
+prox(u, _) = proj(u, ε, g, opt_proj)
 opt_recon = image_reconstruction_FISTA_options(; niter=10, steplength=nothing, niter_step_est=10, prox=prox, W=W, Nesterov=true, verbose=true)
 
 ## Parameter estimation

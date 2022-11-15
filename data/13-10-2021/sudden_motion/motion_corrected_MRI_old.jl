@@ -61,7 +61,7 @@ for i = 1:2#scale_max+1
     g = gradient_norm(2, 1, size(u_conventional_h), (1f0,1f0,1f0); weight=P, T=ComplexF32)
     (scale != 0) ? (ε = 0.3f0*g(u_conventional_h)) : (ε = 0.3f0*g(u_conventional_h))
     opt_proj = opt_fista(1f0/12f0; niter=10, Nesterov=true)
-    prox(u, _) = project(u, ε, g, opt_proj)
+    prox(u, _) = proj(u, ε, g, opt_proj)
     opt_recon = image_reconstruction_FISTA_options(; niter=niter_imrecon[i], steplength=nothing, niter_step_est=10, prox=prox, W=W, Nesterov=true, verbose=true)
 
     ## Parameter estimation
@@ -77,7 +77,7 @@ for i = 1:2#scale_max+1
 
     ### End optimization options #
 
-    # Projecting motion parameters on low-dimensional space
+    # projing motion parameters on low-dimensional space
     idx_θ_h = downscale_phase_encode_index(K; fact=scale)
     θ_h = Float32.(Ip\vec(θ[idx_θ_h, :]))
 

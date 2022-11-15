@@ -63,7 +63,7 @@ for (i, scale) in enumerate(n_scales:-1:0), (j, ε_rel) in enumerate(ε_schedule
         g = gradient_norm(2, 1, size(u_conventional_h), (1f0,1f0,1f0); weight=P, T=ComplexF32)
         ε = ε_rel*g(u_conventional_h)
         opt_proj = opt_fista(1f0/12f0; niter=5, Nesterov=true)
-        prox(u, _) = project(u, ε, g, opt_proj)
+        prox(u, _) = proj(u, ε, g, opt_proj)
         opt_recon = image_reconstruction_FISTA_options(Float32; loss=loss, niter=niter_imrecon[i], steplength=nothing, niter_EstLipschitzConst=3, prox=prox, Nesterov=true, verbose=true)
 
         ## Global

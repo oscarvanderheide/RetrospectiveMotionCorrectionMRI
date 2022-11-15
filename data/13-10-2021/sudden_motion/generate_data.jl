@@ -15,7 +15,7 @@ ground_truth = ComplexF32.(load(string(data_folder, "unprocessed_scans.jld"))["T
 # g = gradient_norm(2, 1, size(prior), (1f0,1f0,1f0); T=ComplexF32)
 # ε = 0.8f0*g(prior)
 # opt_proj = opt_fista(1f0/12f0; niter=20, Nesterov=true)
-# prior = project(prior, ε, g, opt_proj)
+# prior = proj(prior, ε, g, opt_proj)
 
 # Normalization
 # prior = prior/norm(prior, Inf)

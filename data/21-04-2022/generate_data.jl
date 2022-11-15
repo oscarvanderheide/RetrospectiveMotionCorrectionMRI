@@ -27,7 +27,7 @@ ground_truth = load(string(data_folder, unprocessed_file))["T2_nomotion"]
 # # Denoise prior
 # g = gradient_norm(2, 1, size(prior), (1f0, 1f0, 1f0); T=ComplexF32)
 # opt_proj = opt_fista(1f0/12f0; niter=20, Nesterov=true)
-# prior = project(prior, 0.5f0*g(prior), g, opt_proj)
+# prior = proj(prior, 0.5f0*g(prior), g, opt_proj)
 # prior ./= norm(prior, Inf)
 
 # # Save ground-truth and prior

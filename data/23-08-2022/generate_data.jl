@@ -18,7 +18,7 @@ o = ((div(size(T1gd_motion,1),2)+1, 1, 87).-1).*h
 X = spatial_geometry(fov, size(T1gd_motion); origin=o)
 opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
 g = gradient_norm(2, 1, size(prior), spacing(X), opt; complex=true)
-prior = project(prior, 0.8f0*g(prior), g)
+prior = proj(prior, 0.8f0*g(prior), g)
 prior ./= norm(prior, Inf)
 
 # Save ground-truth and prior

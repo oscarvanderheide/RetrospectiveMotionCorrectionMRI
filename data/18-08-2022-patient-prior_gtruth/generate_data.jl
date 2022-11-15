@@ -20,7 +20,7 @@ coord_readout = load(string(exp_folder, unprocessed_scans_file))["coord_readout"
 X = spatial_geometry(fov, size(corrupted)); h = spacing(X)
 opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
 g = gradient_norm(2, 1, size(prior), h, opt; complex=true)
-prior = project(prior, 0.8f0*g(prior), g)
+prior = proj(prior, 0.8f0*g(prior), g)
 prior ./= norm(prior, Inf)
 
 # Generating synthetic data

@@ -20,7 +20,7 @@ version = "1.0.0"
 
 [[deps.AbstractProximableFunctions]]
 deps = ["AbstractLinearOperators", "LinearAlgebra", "Roots"]
-git-tree-sha1 = "4ca11cde6e16ab454e3e3ec410d21b8bfde851e6"
+git-tree-sha1 = "afcd5014d933a09d61bf4a79ab254c32f5b2f1df"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/AbstractProximableFunctions.git"
 uuid = "9ed10759-246d-4065-822b-90d32585fe69"

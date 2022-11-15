@@ -9,11 +9,11 @@ data_folder = string(exp_folder, "data/")
 figures_folder = string(exp_folder, "figures/")
 ~isdir(figures_folder) && mkdir(figures_folder)
 
-# Loop over volunteer, reconstruction type (custom vs DICOM)
-for volunteer = ["52763","52782"], prior_type = ["T1"]
+# Loop over experiment
+for experiment_subname = ["vol1_priorT1","vol2_priorT1"]
 
     # Setting files
-    experiment_subname = string(volunteer, "_prior", string(prior_type)); @info experiment_subname
+    @info experiment_subname
     data_file = string("data_", experiment_subname, ".jld")
     unprocessed_scans_file = string("unprocessed_scans_", experiment_subname, ".jld")
 
@@ -31,9 +31,9 @@ for volunteer = ["52763","52782"], prior_type = ["T1"]
 
     # Denoise prior
     X = spatial_geometry(fov, size(prior)); h = spacing(X)
-    opt = FISTA_optimizer(4f0*sum(1 ./h.^2); Nesterov=true, niter=20)
-    g = gradient_norm(2, 1, size(prior), h; complex=true, optimizer=opt)
-    prior = project(prior, 0.8f0*g(prior), g)
+    opt = FISTA_options(4f0*sum(1f0./h.^2); Nesterov=true, niter=20)
+    g = gradient_norm(2, 1, size(prior), h; complex=true, options=opt)
+    prior = proj(prior, 0.8f0*g(prior), g)
 
     # Generating synthetic data
     K = kspace_sampling(X, permutation_dims[1:2]; phase_encode_sampling=idx_phase_encoding, readout_sampling=idx_readout)
@@ -49,13 +49,11 @@ for volunteer = ["52763","52782"], prior_type = ["T1"]
     # Plotting
     figures_subfolder = string(figures_folder, experiment_subname, "/")
     ~isdir(figures_subfolder) && mkdir(figures_subfolder)
-    x, y, z = div.(size(ground_truth), 2).+1
-    plot_slices = (VolumeSlice(1, x), VolumeSlice(2, y), VolumeSlice(3, z))
-    plot_volume_slices(abs.(ground_truth); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
-    plot_volume_slices(abs.(prior); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(prior, Inf), savefile=string(figures_subfolder, "prior.png"), orientation=orientation)
+    plot_volume_slices(abs.(ground_truth); spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "ground_truth.png"), orientation=orientation)
+    plot_volume_slices(abs.(prior); spatial_geometry=X, vmin=0, vmax=norm(prior, Inf), savefile=string(figures_subfolder, "prior.png"), orientation=orientation)
+    plot_volume_slices(abs.(corrupted_motion1); spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted_motion1.png"), orientation=orientation)
+    plot_volume_slices(abs.(corrupted_motion2); spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted_motion2.png"), orientation=orientation)
+    plot_volume_slices(abs.(corrupted_motion3); spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted_motion3.png"), orientation=orientation)
     close("all")
-    plot_volume_slices(abs.(corrupted_motion1); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted_motion1.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted_motion2); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted_motion2.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted_motion3); slices=plot_slices, spatial_geometry=X, vmin=0, vmax=norm(ground_truth, Inf), savefile=string(figures_subfolder, "corrupted_motion3.png"), orientation=orientation)
 
 end
