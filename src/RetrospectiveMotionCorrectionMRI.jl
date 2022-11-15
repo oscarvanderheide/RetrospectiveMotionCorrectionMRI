@@ -4,6 +4,10 @@ using LinearAlgebra, AbstractLinearOperators, FastSolversForWeightedTV, Abstract
 
 const RealOrComplex{T<:Real} = Union{T,Complex{T}}
 
+abstract type AbstractImageReconstructionOptions end
+abstract type AbstractParameterEstimationOptions end
+abstract type AbstractMotionCorrectionOptions end
+
 include("./imagequality_utils.jl")
 include("./parameter_estimation.jl")
 include("./rigid_registration.jl")

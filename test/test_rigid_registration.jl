@@ -25,6 +25,6 @@ u = F'*(F(θ)*ground_truth)
 opt = rigid_registration_options(; niter=10, verbose=true, fun_history=true)
 
 # Solution
-u_, θ_ = rigid_registration(ground_truth, u, nothing; options=opt, spatial_geometry=X, nscales=2)
+u_, θ_ = rigid_registration(ground_truth, u, nothing, opt; spatial_geometry=X, nscales=2)
 @test θ[1:1,:] ≈ θ_ rtol=1f-3
 @test u ≈ u_ rtol=1f-3

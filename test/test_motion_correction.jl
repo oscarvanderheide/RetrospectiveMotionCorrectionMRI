@@ -24,11 +24,16 @@ u_conventional = F'*d
 
 # Image reconstruction options
 h = spacing(X); LD = 4f0*sum(1 ./h.^2)
-opt_inner = FISTA_optimizer(LD; Nesterov=true, niter=10)
-g = gradient_norm(2, 1, size(ground_truth), h; complex=true, optimizer=opt_inner)
+opt_inner = FISTA_options(LD; Nesterov=true, niter=10)
+g = gradient_norm(2, 1, size(ground_truth), h; complex=true, options=opt_inner)
 ε = 0.8f0*g(ground_truth)
-h = indicator(g ≤ ε)
-opt_imrecon = image_reconstruction_options(; prox=h, Lipschitz_constant=1f0, Nesterov=true, niter=5, verbose=true, fun_history=true)
+x = reshape(range(-1f0, 1f0; length=64), :, 1, 1)
+y = reshape(range(-1f0, 1f0; length=64), 1, :, 1)
+z = reshape(range(-1f0, 1f0; length=64), 1, 1, :)
+r = sqrt.(x.^2 .+y.^2 .+z.^2)
+C = zero_set(ComplexF32, r .< 0.1f0)
+h = indicator(set_options(g+indicator(C), opt_inner) ≤ ε)
+opt_imrecon = image_reconstruction_options(; prox=h, Nesterov=true, niter=5, verbose=true, fun_history=true)
 
 # Parameter estimation options
 ti = Float32.(range(1, nt; length=16))
@@ -42,7 +47,7 @@ opt_parest = parameter_estimation_options(; niter=5, steplength=1f0, λ=0f0, sca
 opt = motion_correction_options(; image_reconstruction_options=opt_imrecon, parameter_estimation_options=opt_parest, niter=40, niter_estimate_Lipschitz=3, verbose=true, fun_history=true)
 θ0 = zeros(Float32, length(ti), 6)
 u0 = zeros(ComplexF32, n)
-u, θ = motion_corrected_reconstruction(F, d, u0, θ0; options=opt)
+u, θ = motion_corrected_reconstruction(F, d, u0, θ0, opt)
 θ = reshape(Ip*vec(θ), length(t), 6)
 
 # Comparison

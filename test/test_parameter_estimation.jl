@@ -23,15 +23,15 @@ d = F(θ_true)*ground_truth
 u_conventional = F'*d
 
 # Optimization options
-ti = Float32.(range(1, nt; length=16))
+ti = Float32.(range(1, nt; length=2^5+1))
 # ti = Float32.(1:nt)
 t = Float32.(1:nt)
 Ip = interpolation1d_motionpars_linop(ti, t)
 D = derivative1d_motionpars_linop(t, 2; pars=(true, true, true, true, true, true))/4f0
-opt = parameter_estimation_options(; niter=10,
+opt = parameter_estimation_options(; niter=100,
                                      steplength=1f0,
                                      λ=0f0,
-                                     scaling_diagonal=1f-5, scaling_id=1f-1,
+                                     scaling_diagonal=1f-3, scaling_id=0f0, scaling_mean=1f-3,
                                      reg_matrix=D,
                                      interp_matrix=Ip,
                                      verbose=true,
@@ -39,5 +39,6 @@ opt = parameter_estimation_options(; niter=10,
 
 # Solution
 θ0 = zeros(Float32, length(ti), 6)
-θ_sol = parameter_estimation(F, ground_truth, d, θ0; options=opt)
+θ_sol = parameter_estimation(F, ground_truth, d, θ0, opt)
 θ_sol_p = reshape(Ip*vec(θ_sol), length(t), 6)
+@test θ_true ≈ θ_sol_p rtol=1f-1

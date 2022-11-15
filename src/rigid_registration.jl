@@ -6,7 +6,7 @@ export rigid_registration_options, rigid_registration
 rigid_registration_options(; niter::Integer=10, verbose::Bool=false, fun_history::Bool=false) = parameter_estimation_options(; niter=niter, steplength=1.0, λ=0.0,
 scaling_diagonal=0.0, scaling_mean=0.0, verbose=verbose, fun_history=fun_history)
 
-function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}; options::Union{Nothing,OptionsParameterEstimation}=nothing, spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing, nscales::Integer=1) where {T<:Real,CT<:RealOrComplex{T}}
+function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}, options::ParameterEstimationOptionsDiff; spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing, nscales::Integer=1) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
     isnothing(spatial_geometry) ? (X = UtilitiesForMRI.spatial_geometry((T(1),T(1),T(1)), size(u_moving))) : (X = spatial_geometry)
@@ -27,7 +27,7 @@ function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArra
         u_moving_h = resample(u_moving, n_h)
 
         # Parameter estimation
-        θ = parameter_estimation(F_h, u_moving_h, F_h*u_fixed_h, θ; options=options)
+        θ = parameter_estimation(F_h, u_moving_h, F_h*u_fixed_h, θ, options)
         (scale == 0) && (return (F_h'*(F_h(θ)*u_moving_h), θ))
 
     end

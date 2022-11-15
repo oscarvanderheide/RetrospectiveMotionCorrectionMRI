@@ -1,6 +1,6 @@
 # Parameter estimation utilities
 
-export OptionsParameterEstimation, parameter_estimation_options, parameter_estimation
+export parameter_estimation_options, parameter_estimation
 
 
 ## Parameter-estimation options
@@ -11,7 +11,7 @@ mutable struct HessianRegularizationParameters
     scaling_id::Real
 end
 
-mutable struct OptionsParameterEstimation
+mutable struct ParameterEstimationOptionsDiff<:AbstractParameterEstimationOptions
     niter::Integer
     steplength::Real
     λ::Real
@@ -31,15 +31,15 @@ function parameter_estimation_options(; niter::Integer=10,
                                         verbose::Bool=false,
                                         fun_history::Bool=false)
     fun_history ? (fval = Array{typeof(steplength),1}(undef,niter)) : (fval = nothing)
-    return OptionsParameterEstimation(niter, steplength, λ, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, HessianRegularizationParameters(scaling_diagonal, scaling_mean, scaling_id), verbose, fval)
+    return ParameterEstimationOptionsDiff(niter, steplength, λ, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, HessianRegularizationParameters(scaling_diagonal, scaling_mean, scaling_id), verbose, fval)
 end
 
-AbstractProximableFunctions.fun_history(options::OptionsParameterEstimation) = options.fun_history
+AbstractProximableFunctions.fun_history(options::ParameterEstimationOptionsDiff) = options.fun_history
 
 
 ## Parameter-estimation algorithms
 
-function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}; options::Union{Nothing,OptionsParameterEstimation}=nothing) where {T<:Real,CT<:RealOrComplex{T}}
+function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}, options::ParameterEstimationOptionsDiff) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables
     θ = deepcopy(initial_estimate)
