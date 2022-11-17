@@ -32,15 +32,15 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
     nt, nk = size(K)
 
     # Multi-scale inversion schedule
-    # n_scales = 4
-    n_scales = 1
+    n_scales = 4
+    # n_scales = 1
     niter_imrecon = ones(Integer, n_scales)
     niter_parest  = ones(Integer, n_scales)
-    # niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
-    niter_outloop = 2*ones(Integer, n_scales); niter_outloop[end] = 2;
-    ε_schedule = [0.01f0, 0.1f0, 0.8f0]
-    # niter_registration = 10
-    niter_registration = 2
+    niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
+    # niter_outloop = 2*ones(Integer, n_scales); niter_outloop[end] = 2;
+    ε_schedule = [0.01f0, 0.1f0, 0.2f0]
+    niter_registration = 10
+    # niter_registration = 2
     nt, _ = size(K)
 
     # Setting starting values
@@ -92,12 +92,12 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
         opt_inner = FISTA_options(4f0*sum(1f0./h.^2); Nesterov=true, niter=10)
         C0 = zero_set(ComplexF32, (!).(mask_h))
         g = gradient_norm(2, 1, n_h, h; weight=P, complex=true, options=opt_inner)
-        # g1 = set_options(g+indicator(C0), opt_inner)
-        g1 = g #########################
+        g1 = set_options(g+indicator(C0), opt_inner)
+        # g1 = g
         opt_imrecon(ε) = image_reconstruction_options(; prox=indicator(g1 ≤ ε), Nesterov=true, niter=niter_imrecon[i])
 
         ## Global
-        opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3, verbose=true)
+        opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3, verbose=false)
 
         ### End optimization options ###
 
