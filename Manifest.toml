@@ -20,7 +20,7 @@ version = "1.0.0"
 
 [[deps.AbstractProximableFunctions]]
 deps = ["AbstractLinearOperators", "LinearAlgebra", "Roots"]
-git-tree-sha1 = "afcd5014d933a09d61bf4a79ab254c32f5b2f1df"
+git-tree-sha1 = "bd906aab29b9f07bee9dae773f7f9f448b61ce1e"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/AbstractProximableFunctions.git"
 uuid = "9ed10759-246d-4065-822b-90d32585fe69"
@@ -61,9 +61,9 @@ version = "0.1.26"
 
 [[deps.ArrayInterfaceOffsetArrays]]
 deps = ["ArrayInterface", "OffsetArrays", "Static"]
-git-tree-sha1 = "c49f6bad95a30defff7c637731f00934c7289c50"
+git-tree-sha1 = "3d1a9a01976971063b3930d1aed1d9c4af0817f8"
 uuid = "015c0d05-e682-4f19-8f0a-679ce4c54826"
-version = "0.1.6"
+version = "0.1.7"
 
 [[deps.ArrayInterfaceStaticArrays]]
 deps = ["Adapt", "ArrayInterface", "ArrayInterfaceStaticArraysCore", "LinearAlgebra", "Static", "StaticArrays"]
@@ -108,9 +108,9 @@ version = "0.1.1"
 
 [[deps.BitTwiddlingConvenienceFunctions]]
 deps = ["Static"]
-git-tree-sha1 = "eaee37f76339077f86679787a71990c4e465477f"
+git-tree-sha1 = "0c5f81f47bbbcf4aea7b2959135713459170798b"
 uuid = "62783981-4cbd-42fc-bca8-16325de8dc4b"
-version = "0.1.4"
+version = "0.1.5"
 
 [[deps.CEnum]]
 git-tree-sha1 = "eb4cb44a499229b3b8426dcfb5dd85333951ff90"
@@ -119,9 +119,9 @@ version = "0.4.2"
 
 [[deps.CPUSummary]]
 deps = ["CpuId", "IfElse", "Static"]
-git-tree-sha1 = "dbd159ae8fd586ab69a6b17c1a3fd9da7b58728b"
+git-tree-sha1 = "a7157ab6bcda173f533db4c93fc8a27a48843757"
 uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
-version = "0.1.29"
+version = "0.1.30"
 
 [[deps.CUDA]]
 deps = ["AbstractFFTs", "Adapt", "BFloat16s", "CEnum", "CompilerSupportLibraries_jll", "ExprTools", "GPUArrays", "GPUCompiler", "LLVM", "LazyArtifacts", "Libdl", "LinearAlgebra", "Logging", "Printf", "Random", "Random123", "RandomNumbers", "Reexport", "Requires", "SparseArrays", "SpecialFunctions", "TimerOutputs"]
@@ -190,9 +190,9 @@ version = "0.3.0"
 
 [[deps.Compat]]
 deps = ["Dates", "LinearAlgebra", "UUIDs"]
-git-tree-sha1 = "3ca828fe1b75fa84b021a7860bd039eaea84d2f2"
+git-tree-sha1 = "aaabba4ce1b7f8a9b34c015053d3b1edf60fa49c"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "4.3.0"
+version = "4.4.0"
 
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -361,7 +361,7 @@ version = "0.1.1"
 
 [[deps.FastSolversForWeightedTV]]
 deps = ["AbstractLinearOperators", "AbstractProximableFunctions", "CUDA", "LinearAlgebra", "NNlib"]
-git-tree-sha1 = "76f86e923d03c65f9d8128a6bc3c0f30be277952"
+git-tree-sha1 = "ba2bc885e85d9cce8079d10df31f869a8f2dd55e"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/FastSolversForWeightedTV.git"
 uuid = "3521e485-16e8-49c3-934a-dec609b578e8"
@@ -441,9 +441,9 @@ version = "1.1.2"
 
 [[deps.HostCPUFeatures]]
 deps = ["BitTwiddlingConvenienceFunctions", "IfElse", "Libdl", "Static"]
-git-tree-sha1 = "c21fbfd585e522510b657134d889fcea8574b5bb"
+git-tree-sha1 = "f64b890b2efa4de81520d2b0fbdc9aadb65bdf53"
 uuid = "3e5b6fbb-0976-4d2c-9146-d79de83f2fb0"
-version = "0.1.11"
+version = "0.1.13"
 
 [[deps.IRTools]]
 deps = ["InteractiveUtils", "MacroTools", "Test"]
@@ -645,9 +645,9 @@ uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
 version = "2022.2.0+0"
 
 [[deps.MLStyle]]
-git-tree-sha1 = "43f9be9c281179fe44205e2dc19f22e71e022d41"
+git-tree-sha1 = "060ef7956fef2dc06b0e63b294f7dbfbcbdc7ea2"
 uuid = "d8e11817-5142-5d16-987a-aa16d5891078"
-version = "0.4.15"
+version = "0.4.16"
 
 [[deps.MLUtils]]
 deps = ["ChainRulesCore", "DelimitedFiles", "FLoops", "FoldsThreads", "Random", "ShowCases", "Statistics", "StatsBase", "Transducers"]
@@ -786,9 +786,9 @@ version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
-git-tree-sha1 = "cceb0257b662528ecdf0b4b4302eb00e767b38e7"
+git-tree-sha1 = "b64719e8b4504983c7fca6cc9db3ebc8acc2a4d6"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.5.0"
+version = "2.5.1"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -797,9 +797,9 @@ version = "1.8.0"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
-git-tree-sha1 = "b42fb2292fbbaed36f25d33a15c8cc0b4f287fcf"
+git-tree-sha1 = "050ca4aa2ca31484b51b849d8180caf8e4449c49"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
-version = "0.1.10"
+version = "0.1.11"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -978,9 +978,9 @@ version = "0.7.8"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "f86b3a049e5d05227b10e15dbb315c5b90f14988"
+git-tree-sha1 = "4e051b85454b4e4f66e6a6b7bdc452ad9da3dcf6"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.9"
+version = "1.5.10"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
@@ -1083,7 +1083,7 @@ uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [[deps.UtilitiesForMRI]]
 deps = ["AbstractLinearOperators", "Dierckx", "FFTW", "FINUFFT", "ImageFiltering", "LinearAlgebra", "PyPlot", "SparseArrays"]
-git-tree-sha1 = "01113f26ea326e4083f2b054e94d8e369af673af"
+git-tree-sha1 = "585902c7e5da277fdf2522eb0f98f11f0c5c54ff"
 repo-rev = "main"
 repo-url = "https://github.com/grizzuti/UtilitiesForMRI.git"
 uuid = "5f442635-cb9d-4e13-b358-1c870cfef0cf"
