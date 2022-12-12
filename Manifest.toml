@@ -383,10 +383,10 @@ uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.4"
 
 [[deps.Flux]]
-deps = ["Adapt", "ArrayInterface", "CUDA", "ChainRulesCore", "Functors", "LinearAlgebra", "MLUtils", "MacroTools", "NNlib", "NNlibCUDA", "OneHotArrays", "Optimisers", "ProgressLogging", "Random", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "Test", "Zygote"]
-git-tree-sha1 = "66b62bf72c4b5d4904441ed0677eab53266033c7"
+deps = ["Adapt", "CUDA", "ChainRulesCore", "Functors", "LinearAlgebra", "MLUtils", "MacroTools", "NNlib", "NNlibCUDA", "OneHotArrays", "Optimisers", "ProgressLogging", "Random", "Reexport", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "Test", "Zygote"]
+git-tree-sha1 = "fdbac308c552f749122b0ad8d7cdca02ac131531"
 uuid = "587475ba-b771-5e3f-ad9e-33799f191a9c"
-version = "0.13.7"
+version = "0.13.8"
 
 [[deps.FoldsThreads]]
 deps = ["Accessors", "FunctionWrappers", "InitialValues", "SplittablesBase", "Transducers"]
@@ -625,9 +625,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "94d9c52ca447e23eac0c0f074effbcd38830deb5"
+git-tree-sha1 = "946607f84feb96220f480e0422d3484c49c00239"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.18"
+version = "0.3.19"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -650,10 +650,10 @@ uuid = "d8e11817-5142-5d16-987a-aa16d5891078"
 version = "0.4.16"
 
 [[deps.MLUtils]]
-deps = ["ChainRulesCore", "DelimitedFiles", "FLoops", "FoldsThreads", "Random", "ShowCases", "Statistics", "StatsBase", "Transducers"]
-git-tree-sha1 = "824e9dfc7509cab1ec73ba77b55a916bb2905e26"
+deps = ["ChainRulesCore", "DataAPI", "DelimitedFiles", "FLoops", "FoldsThreads", "NNlib", "Random", "ShowCases", "SimpleTraits", "Statistics", "StatsBase", "Tables", "Transducers"]
+git-tree-sha1 = "82c1104919d664ab1024663ad851701415300c5f"
 uuid = "f1d291b0-491e-4a28-83b9-f70985020b54"
-version = "0.2.11"
+version = "0.3.1"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -740,10 +740,10 @@ uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 version = "1.12.8"
 
 [[deps.OneHotArrays]]
-deps = ["Adapt", "ChainRulesCore", "GPUArrays", "LinearAlgebra", "MLUtils", "NNlib"]
-git-tree-sha1 = "2f6efe2f76d57a0ee67cb6eff49b4d02fccbd175"
+deps = ["Adapt", "ChainRulesCore", "GPUArraysCore", "LinearAlgebra", "MLUtils", "NNlib"]
+git-tree-sha1 = "aee0130122fa7c1f3d394231376f07869f1e097c"
 uuid = "0b1bfda6-eb8a-41d2-88d8-f5af5cad476f"
-version = "0.1.0"
+version = "0.2.0"
 
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
@@ -763,9 +763,9 @@ version = "0.5.5+0"
 
 [[deps.Optimisers]]
 deps = ["ChainRulesCore", "Functors", "LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "8a9102cb805df46fc3d6effdc2917f09b0215c0b"
+git-tree-sha1 = "c8884e88057968a715ddfd39f5c18b4c03aa3b64"
 uuid = "3bd65402-5787-11e9-1adc-39752487f4e2"
-version = "0.2.10"
+version = "0.2.11"
 
 [[deps.OrderedCollections]]
 git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
@@ -934,6 +934,12 @@ git-tree-sha1 = "7f534ad62ab2bd48591bdeac81994ea8c445e4a5"
 uuid = "605ecd9f-84a6-4c9e-81e2-4798472b76a3"
 version = "0.1.0"
 
+[[deps.SimpleTraits]]
+deps = ["InteractiveUtils", "MacroTools"]
+git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
+uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
+version = "0.9.4"
+
 [[deps.SnoopPrecompile]]
 git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
 uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
@@ -1065,9 +1071,9 @@ version = "0.5.22"
 
 [[deps.Transducers]]
 deps = ["Adapt", "ArgCheck", "BangBang", "Baselet", "CompositionsBase", "DefineSingletons", "Distributed", "InitialValues", "Logging", "Markdown", "MicroCollections", "Requires", "Setfield", "SplittablesBase", "Tables"]
-git-tree-sha1 = "77fea79baa5b22aeda896a8d9c6445a74500a2c2"
+git-tree-sha1 = "c42fa452a60f022e9e087823b47e5a5f8adc53d5"
 uuid = "28d57a85-8fef-5791-bfe6-a80928e7c999"
-version = "0.4.74"
+version = "0.4.75"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]
