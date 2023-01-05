@@ -17,7 +17,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
     @info string("Exp: ", experiment_subname, ", motion type: ", motion_type)
     figures_subfolder = string(figures_folder, experiment_subname, "/"); ~isdir(figures_subfolder) && mkdir(figures_subfolder)
     data_file = string("data_", experiment_subname, ".jld")
-    X, K, data, prior, ground_truth, corrupted, orientation, mask = load(string(data_folder, data_file), "X", "K", string("data_motion", motion_type), "prior", "ground_truth", string("corrupted_motion", motion_type), "orientation", "mask_prior")
+    X, K, data, prior, ground_truth, corrupted, orientation, mask = load(string(data_folder, data_file), "X", "K", string("data_motion", motion_type), "prior", "ground_truth", string("corrupted_motion", motion_type), "orientation", "mask")
 
     # Setting Fourier operator
     F = nfft_linop(X, K)
