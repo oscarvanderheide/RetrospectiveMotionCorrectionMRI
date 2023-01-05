@@ -82,7 +82,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
         P = structural_weight(prior_h; h=h, η=η, γ=1f0)
         # P = nothing
         opt_inner = FISTA_options(4f0*sum(1f0./h.^2); Nesterov=true, niter=10)
-        C0 = zero_set(ComplexF32, (!).(mask_h))
+        # C0 = zero_set(ComplexF32, (!).(mask_h))
         g = gradient_norm(2, 1, n_h, h; weight=P, complex=true, options=opt_inner)
         # g1 = set_options(g+indicator(C0), opt_inner)
         g1 = g #########################
@@ -115,7 +115,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
             θ[t_fine_h[end]-n_avg+1:end,:] .= sum(θ[t_fine_h[end]-n_avg+1:t_fine_h[end],:]; dims=1)/n_avg
 
             # Plot
-            plot_volume_slices(abs.(u); spatial_geometry=X_h, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "temp.png"), orientation=orientation)
+            plot_volume_slices(abs.(u); spatial_geometry=X_h, vmin=0f0, vmax=norm(ground_truth,Inf), savefile=string(figures_subfolder, "temp.png"), orientation=orientation)
             θ_min =  minimum(θ; dims=1); θ_max = maximum(θ; dims=1); Δθ = θ_max-θ_min; θ_middle = (θ_min+θ_max)/2
             Δθ = [ones(1,3)*max(Δθ[1:3]...)/2 ones(1,3)*max(Δθ[4:end]...)/2]
             plot_parameters(1:nt, θ, nothing; xlabel="t = phase encoding", vmin=vec(θ_middle-1.1f0*Δθ), vmax=vec(θ_middle+1.1f0*Δθ), fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "temp_motion_pars.png"))
