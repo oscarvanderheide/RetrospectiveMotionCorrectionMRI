@@ -17,15 +17,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
     @info string("Exp: ", experiment_subname, ", motion type: ", motion_type)
     figures_subfolder = string(figures_folder, experiment_subname, "/"); ~isdir(figures_subfolder) && mkdir(figures_subfolder)
     data_file = string("data_", experiment_subname, ".jld")
-    X = load(string(data_folder, data_file))["X"]
-    K = load(string(data_folder, data_file))["K"]
-    data = load(string(data_folder, data_file))[string("data_motion", motion_type)]
-    prior = load(string(data_folder, data_file))["prior"]
-    ground_truth = load(string(data_folder, data_file))["ground_truth"]
-    corrupted = load(string(data_folder, data_file))[string("corrupted_motion", motion_type)]
-    vmin = 0f0; vmax = maximum(abs.(ground_truth))
-    orientation = load(string(data_folder, data_file))["orientation"]
-    mask = load(string(data_folder, data_file))["mask"]
+    X, K, data, prior, ground_truth, corrupted, orientation, mask = load(string(data_folder, data_file), "X", "K", string("data_motion", motion_type), "prior", "ground_truth", string("corrupted_motion", motion_type), "orientation", "mask_prior")
 
     # Setting Fourier operator
     F = nfft_linop(X, K)
@@ -60,7 +52,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
         data_h = subsample(K, data, K_h; norm_constant=F.norm_constant/F_h.norm_constant, damping_factor=damping_factor)
         prior_h = resample(prior, n_h; damping_factor=damping_factor)
         ground_truth_h = resample(ground_truth, n_h; damping_factor=damping_factor)
-        mask_h = resample(mask, n_h)
+        # mask_h = resample(mask, n_h)
         u = resample(u, n_h)
 
         # Down-scaling the problem (temporally)...
@@ -124,14 +116,12 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
 
             # Plot
             plot_volume_slices(abs.(u); spatial_geometry=X_h, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "temp.png"), orientation=orientation)
-            close("all")
-            plot_parameters(1:nt, θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "temp_motion_pars.png"))
+            θ_min =  minimum(θ; dims=1); θ_max = maximum(θ; dims=1); Δθ = θ_max-θ_min; θ_middle = (θ_min+θ_max)/2
+            Δθ = [ones(1,3)*max(Δθ[1:3]...)/2 ones(1,3)*max(Δθ[4:end]...)/2]
+            plot_parameters(1:nt, θ, nothing; xlabel="t = phase encoding", vmin=vec(θ_middle-1.1f0*Δθ), vmax=vec(θ_middle+1.1f0*Δθ), fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "temp_motion_pars.png"))
             close("all")
 
         end
-
-        # Up-scaling reconstruction
-        u = resample(u, X.nsamples)
 
     end
 
