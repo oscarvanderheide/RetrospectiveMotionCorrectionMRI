@@ -32,15 +32,15 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
     nt, nk = size(K)
 
     # Multi-scale inversion schedule
-    # n_scales = 4
-    n_scales = 1
+    n_scales = 4
+    # n_scales = 1
     niter_imrecon = ones(Integer, n_scales)
     niter_parest  = ones(Integer, n_scales)
-    # niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
-    niter_outloop = 2*ones(Integer, n_scales); niter_outloop[end] = 2;
+    niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
+    # niter_outloop = 2*ones(Integer, n_scales); niter_outloop[end] = 2;
     ε_schedule = [0.01f0, 0.1f0, 0.8f0]
-    # niter_registration = 10
-    niter_registration = 2
+    niter_registration = 10
+    # niter_registration = 2
     nt, _ = size(K)
 
     # Setting starting values
@@ -49,7 +49,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
 
     # Loop over scales
     damping_factor = nothing
-    for (i, scale) in enumerate(n_scales-1:-1:0)
+    @time for (i, scale) in enumerate(n_scales-1:-1:0)
 
         # Down-scaling the problem (spatially)...
         n_h = div.(X.nsamples, 2^scale)
@@ -97,7 +97,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
         opt_imrecon(ε) = image_reconstruction_options(; prox=indicator(g1 ≤ ε), Nesterov=true, niter=niter_imrecon[i])
 
         ## Global
-        opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3, verbose=true)
+        opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3, verbose=false)
 
         ### End optimization options ###
 
@@ -113,6 +113,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
             θ_h = reshape(Ip_c2fh*vec(θ_coarse), :, 6)
             corrupted_h = F_h(θ_h)'*data_h
             ε = ε_rel*g(corrupted_h)
+            # ε = ε_rel*g(ground_truth_h) # inverse crime for conventional TV!
             u, θ_coarse = motion_corrected_reconstruction(F_h, data_h, u, θ_coarse, opt(ε))
 
             # Up-scaling motion parameters
@@ -137,22 +138,26 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
     # Denoising ground-truth/corrupted volumes
     @info "@@@ Post-processing figures"
     opt_reg = rigid_registration_options(; niter=niter_registration, verbose=false)
-    u_reg, _         = rigid_registration(u, ground_truth, nothing, opt_reg; spatial_geometry=X, nscales=3)
-    corrupted_reg, _ = rigid_registration(corrupted, ground_truth, nothing, opt_reg; spatial_geometry=X, nscales=3)
+    u_reg, _ = rigid_registration(u, ground_truth, nothing, opt_reg; spatial_geometry=X, nscales=5)
+    corrupted_reg, _ = rigid_registration(corrupted, ground_truth, nothing, opt_reg; spatial_geometry=X, nscales=5)
     opt_postproc = FISTA_options(4f0*sum(1f0./spacing(X).^2); Nesterov=true, niter=10)
     g = gradient_norm(2, 1, size(ground_truth), spacing(X); complex=true)
     C = zero_set(ComplexF32, (!).(mask))
     ε_reg = 0.8f0*g(ground_truth)
-    u_reg            = proj(u_reg,          g(u), g, opt_postproc); u_reg = proj(u_reg, C)
+    u_reg = proj(u_reg, g(u), g, opt_postproc); u_reg = proj(u_reg, C)
     corrupted_reg    = proj(corrupted_reg, ε_reg, g, opt_postproc); corrupted_reg = proj(corrupted_reg, C)
     ground_truth_reg = proj(ground_truth,  ε_reg, g, opt_postproc); ground_truth_reg = proj(ground_truth_reg, C)
 
     # Reconstruction quality
+    nx, ny, nz = size(ground_truth)[[invperm(orientation.perm)...]]
+    slices = (VolumeSlice(1, div(nx,2)+1, nothing),
+              VolumeSlice(2, div(ny,2)+1, nothing),
+              VolumeSlice(3, div(nz,2)+1, nothing))
     fact = norm(ground_truth, Inf)
-    psnr_recon = psnr(abs.(u_reg)/fact, abs.(ground_truth)/fact)
-    psnr_conv = psnr(abs.(corrupted_reg)/fact, abs.(ground_truth)/fact)
-    ssim_recon = ssim(abs.(u_reg)/fact, abs.(ground_truth)/fact)
-    ssim_conv = ssim(abs.(corrupted_reg)/fact, abs.(ground_truth)/fact)
+    psnr_recon = psnr(abs.(u_reg)/fact, abs.(ground_truth_reg)/fact; slices=slices, orientation=orientation)
+    psnr_conv = psnr(abs.(corrupted_reg)/fact, abs.(ground_truth_reg)/fact; slices=slices, orientation=orientation)
+    ssim_recon = ssim(abs.(u_reg)/fact, abs.(ground_truth_reg)/fact; slices=slices, orientation=orientation)
+    ssim_conv = ssim(abs.(corrupted_reg)/fact, abs.(ground_truth_reg)/fact; slices=slices, orientation=orientation)
     @info string("@@@ Conventional reconstruction: psnr = ", psnr_conv, ", ssim = ", ssim_conv)
     @info string("@@@ Joint reconstruction: psnr = ", psnr_recon, ", ssim = ", ssim_recon)
 
@@ -160,8 +165,10 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
     @save string(results_folder, "results_", experiment_subname, "_motion", motion_type, ".jld") u θ psnr_recon psnr_conv ssim_recon ssim_conv u_reg corrupted_reg ground_truth_reg
     plot_volume_slices(abs.(u_reg); spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrected_motion", string(motion_type), ".png"), orientation=orientation)
     plot_volume_slices(abs.(ground_truth_reg); spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "ground_truth_reg.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted_reg); spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrupted_reg.png"), orientation=orientation)
-    plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=[-10, -10, -10, -10, -10, -10], vmax=[10, 10, 10, 10, 10, 10], fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "parameters_motion", string(motion_type), ".png"))
+    plot_volume_slices(abs.(corrupted_reg); spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrupted_reg_motion", string(motion_type), ".png"), orientation=orientation)
+    θ_min =  minimum(θ; dims=1); θ_max = maximum(θ; dims=1); Δθ = θ_max-θ_min; θ_middle = (θ_min+θ_max)/2
+    Δθ = [ones(1,3)*max(Δθ[1:3]...)/2 ones(1,3)*max(Δθ[4:end]...)/2]
+    plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=vec(θ_middle-1.1f0*Δθ), vmax=vec(θ_middle+1.1f0*Δθ), fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "parameters_motion", string(motion_type), ".png"))
     close("all")
 
 end
