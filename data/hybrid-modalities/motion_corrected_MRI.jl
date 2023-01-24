@@ -11,7 +11,7 @@ results_folder = string(exp_folder, "results/")
 ~isdir(results_folder) && mkdir(results_folder)
 
 # Loop over volunteer, reconstruction type (custom vs DICOM), and motion type
-for experiment_subname = ["vol1_priorT1"], motion_type = [1,2,3]
+for experiment_subname = ["vol1_priorT1"], motion_type = [3]
 
     # Loading data
     @info string("Exp: ", experiment_subname, ", motion type: ", motion_type)
@@ -41,7 +41,7 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [1,2,3]
 
     # Loop over scales
     damping_factor = nothing
-    @time for (i, scale) in enumerate(n_scales-1:-1:0)
+    for (i, scale) in enumerate(n_scales-1:-1:0)
 
         # Down-scaling the problem (spatially)...
         n_h = div.(X.nsamples, 2^scale)
@@ -152,10 +152,10 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [1,2,3]
     @info string("@@@ Joint reconstruction: psnr = ", psnr_recon, ", ssim = ", ssim_recon)
 
     # Save and plot results
-    @save string(results_folder, "results_", experiment_subname, "_motion", motion_type, ".jld") u θ psnr_recon psnr_conv ssim_recon ssim_conv u_reg corrupted_reg ground_truth_reg
-    plot_volume_slices(abs.(u_reg); spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrected_motion", string(motion_type), ".png"), orientation=orientation)
-    plot_volume_slices(abs.(ground_truth_reg); spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "ground_truth_reg.png"), orientation=orientation)
-    plot_volume_slices(abs.(corrupted_reg); spatial_geometry=X, vmin=vmin, vmax=vmax, savefile=string(figures_subfolder, "corrupted_reg_motion", string(motion_type), ".png"), orientation=orientation)
+    save(string(results_folder, "results_", experiment_subname, "_motion", motion_type, ".jld"), "u", u, "θ", θ, "psnr_recon", psnr_recon, "psnr_conv", psnr_conv, "ssim_recon", ssim_recon, "ssim_conv", ssim_conv, "u_reg", u_reg, "corrupted_reg", corrupted_reg, "ground_truth_reg", ground_truth_reg)
+    plot_volume_slices(abs.(u_reg); spatial_geometry=X, vmin=0f0, vmax=norm(ground_truth,Inf), savefile=string(figures_subfolder, "corrected_motion", string(motion_type), ".png"), orientation=orientation)
+    plot_volume_slices(abs.(ground_truth_reg); spatial_geometry=X, vmin=0f0, vmax=norm(ground_truth,Inf), savefile=string(figures_subfolder, "ground_truth_reg.png"), orientation=orientation)
+    plot_volume_slices(abs.(corrupted_reg); spatial_geometry=X, vmin=0f0, vmax=norm(ground_truth,Inf), savefile=string(figures_subfolder, "corrupted_reg_motion", string(motion_type), ".png"), orientation=orientation)
     θ_min =  minimum(θ; dims=1); θ_max = maximum(θ; dims=1); Δθ = θ_max-θ_min; θ_middle = (θ_min+θ_max)/2
     Δθ = [ones(1,3)*max(Δθ[1:3]...)/2 ones(1,3)*max(Δθ[4:end]...)/2]
     plot_parameters(1:size(θ,1), θ, nothing; xlabel="t = phase encoding", vmin=vec(θ_middle-1.1f0*Δθ), vmax=vec(θ_middle+1.1f0*Δθ), fmt1="b", linewidth1=2, savefile=string(figures_subfolder, "parameters_motion", string(motion_type), ".png"))

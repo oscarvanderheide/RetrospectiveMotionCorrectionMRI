@@ -18,7 +18,8 @@ for experiment_subname = ["vol1_priorT1"]
     unprocessed_scans_file = string("unprocessed_scans_", experiment_subname, ".jld")
 
     # Loading unprocessed data
-    prior = load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior_resampled"] ####
+    # prior = load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior_resampled"] ####
+    prior = load(string(unprocessed_scans_folder, unprocessed_scans_file))["prior"]
     ground_truth = load(string(unprocessed_scans_folder, unprocessed_scans_file))["ground_truth"]
     corrupted_motion1 = load(string(unprocessed_scans_folder, unprocessed_scans_file))["corrupted_motion1"]
     corrupted_motion2 = load(string(unprocessed_scans_folder, unprocessed_scans_file))["corrupted_motion2"]
