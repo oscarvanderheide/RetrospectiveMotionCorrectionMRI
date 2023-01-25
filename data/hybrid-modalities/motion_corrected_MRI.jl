@@ -24,13 +24,14 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
     nt, nk = size(K)
 
     # Multi-scale inversion schedule
-    n_scales = 4
+    n_scales = 3
     # n_scales = 1
     niter_imrecon = ones(Integer, n_scales)
     niter_parest  = ones(Integer, n_scales)
     niter_outloop = 100*ones(Integer, n_scales); niter_outloop[end] = 10;
     # niter_outloop = 2*ones(Integer, n_scales); niter_outloop[end] = 2;
     ε_schedule = [0.01f0, 0.1f0, 0.8f0]
+    # ε_schedule = [0.01f0]
     niter_registration = 10
     # niter_registration = 2
     nt, _ = size(K)
@@ -89,7 +90,8 @@ for experiment_subname = ["vol1_priorT1"], motion_type = [3]
         opt_imrecon(ε) = image_reconstruction_options(; prox=indicator(g1 ≤ ε), Nesterov=true, niter=niter_imrecon[i])
 
         ## Global
-        opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3, verbose=false)
+        # opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=3, verbose=false)
+        opt(ε) = motion_correction_options(; image_reconstruction_options=opt_imrecon(ε), parameter_estimation_options=opt_parest, niter=niter_outloop[i], niter_estimate_Lipschitz=20, verbose=false) ##########
 
         ### End optimization options ###
 

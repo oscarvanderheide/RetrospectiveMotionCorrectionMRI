@@ -18,6 +18,7 @@ mutable struct ParameterEstimationOptionsDiff<:AbstractParameterEstimationOption
     reg_matrix::Union{Nothing,AbstractMatrix}
     interp_matrix::Union{Nothing,AbstractMatrix}
     reg_Hessian::HessianRegularizationParameters
+    calibration::Bool
     verbose::Bool
     fun_history::Union{Nothing,AbstractVector}
 end
@@ -28,10 +29,11 @@ function parameter_estimation_options(; niter::Integer=10,
                                         scaling_diagonal::Real=0f0, scaling_mean::Real=0f0, scaling_id::Real=0f0,
                                         reg_matrix::Union{Nothing,AbstractMatrix{<:Real}}=nothing,
                                         interp_matrix::Union{Nothing,AbstractMatrix{<:Real}}=nothing,
+                                        calibration::Bool=false,
                                         verbose::Bool=false,
                                         fun_history::Bool=false)
     fun_history ? (fval = Array{typeof(steplength),1}(undef,niter)) : (fval = nothing)
-    return ParameterEstimationOptionsDiff(niter, steplength, λ, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, HessianRegularizationParameters(scaling_diagonal, scaling_mean, scaling_id), verbose, fval)
+    return ParameterEstimationOptionsDiff(niter, steplength, λ, isnothing(reg_matrix) ? nothing : reg_matrix, isnothing(interp_matrix) ? nothing : interp_matrix, HessianRegularizationParameters(scaling_diagonal, scaling_mean, scaling_id), calibration, verbose, fval)
 end
 
 AbstractProximableFunctions.fun_history(options::ParameterEstimationOptionsDiff) = options.fun_history
@@ -54,7 +56,13 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         Fθu, _, Jθ = ∂(F()*u, Iθ)
 
         # Data misfit
-        r = Fθu-d
+        if options.calibration
+            α = sum(conj(Fθu).*d; dims=2)./sum(abs.(Fθu).^2; dims=2)
+            A = linear_operator(Complex{T}, size(d), size(d), d->α.*d, d->conj(α).*d)
+        else
+            A = identity_operator(Complex{T}, size(d))
+        end
+        r = A*Fθu-d
         (~isnothing(options.fun_history) || options.verbose) && (fval_n = T(0.5)*norm(r)^2)
 
         # Regularization term
@@ -68,12 +76,12 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         options.verbose && (@info string("Iter [", n, "/", options.niter, "], fval = ", fval_n))
 
         # Compute gradient
-        g = Jθ'*r
+        g = Jθ'*A'*r
         interp_flag && (g = reshape(Ip'*vec(g), :, 6))
         reg_flag && (g .+= options.λ^2*reshape(D'*vec(Dθ), :, 6))
 
         # Hessian
-        H = sparse_matrix_GaussNewton(Jθ)
+        H = sparse_matrix_GaussNewton(Jθ; W=A)
         interp_flag && (H = Ip'*H*Ip)
         reg_flag && (H .+= options.λ^2*(D'*D))
 
