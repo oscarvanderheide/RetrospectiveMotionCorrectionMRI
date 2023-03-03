@@ -23,6 +23,25 @@ mutable struct ParameterEstimationOptionsDiff<:AbstractParameterEstimationOption
     fun_history::Union{Nothing,AbstractVector}
 end
 
+"""
+    parameter_estimation_options(; niter=10,
+                                   steplength=1f0,
+                                   λ=0f0,
+                                   scaling_diagonal=0f0, scaling_mean=0f0, scaling_id=0f0,
+                                   reg_matrix=nothing,
+                                   interp_matrix=nothing,
+                                   verbose=false,
+                                   fun_history=false)
+
+Returns parameter estimation options for the optimization problem in [`parameter_estimation`](@ref):
+- `niter`: number of iterations
+- `steplength`
+- `λ`: weight of regularization
+- `scaling_diagonal`, `scaling_mean`, `scaling_id`: parameters associated to the pseudo-Hessian of the objective
+- `reg_matrix`: regularization weight matrix
+- `interp_matrix`: interpolation matrix
+- `verbose`, `fun_history`: for debugging purposes
+"""
 function parameter_estimation_options(; niter::Integer=10,
                                         steplength::Real=1f0,
                                         λ::Real=0f0,
@@ -41,6 +60,14 @@ AbstractProximableFunctions.fun_history(options::ParameterEstimationOptionsDiff)
 
 ## Parameter-estimation algorithms
 
+"""
+    parameter_estimation(F, u, d, initial_estimate, options)
+
+Solves the parameter estimation optimization problem (see Section [`Rigid motion parameter estimation`](@ref section-parest) for more details)
+```math
+\\min_{\\theta}
+```
+"""
 function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}, options::ParameterEstimationOptionsDiff) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Initialize variables

@@ -1,0 +1,1 @@
+# [Rigid motion parameter estimation](@id section-parest)

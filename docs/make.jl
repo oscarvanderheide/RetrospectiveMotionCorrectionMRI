@@ -7,17 +7,21 @@ format = Documenter.HTML()
 Introduction = "Introduction" => "index.md"
 Installation = "Installation" => "installation.md"
 GettingStarted = "Getting started" => "examples.md"
+ParameterEstimation = "Rigid motion parameter estimation" => "parameter_estimation.md"
+ImageReconstruction = "Image reconstruction" => "image_reconstruction.md"
 MainFunctions = "Main functions" => "functions.md"
 
 PAGES = [
     Introduction,
     Installation,
     GettingStarted,
+    ImageReconstruction,
+    ParameterEstimation,
     MainFunctions
     ]
 
 makedocs(
-    modules = [AbstractProximableFunctions, FastSolversForWeightedTV, RetrospectiveMotionCorrectionMRI],
+    modules = [RetrospectiveMotionCorrectionMRI],
     sitename = "RetrospectiveMotionCorrectionMRI.jl",
     authors = "Gabrio Rizzuti",
     format = format,
