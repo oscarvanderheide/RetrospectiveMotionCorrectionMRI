@@ -33,7 +33,7 @@ end
                                    verbose=false,
                                    fun_history=false)
 
-Returns parameter estimation options for the optimization problem in [`parameter_estimation`](@ref):
+Returns parameter estimation options for the optimization problem underlying the solver [`parameter_estimation`](@ref):
 - `niter`: number of iterations
 - `steplength`
 - `λ`: weight of regularization
@@ -41,6 +41,8 @@ Returns parameter estimation options for the optimization problem in [`parameter
 - `reg_matrix`: regularization weight matrix
 - `interp_matrix`: interpolation matrix
 - `verbose`, `fun_history`: for debugging purposes
+
+Note: for more details on each of these parameters, consult [this section](@ref section-parest).
 """
 function parameter_estimation_options(; niter::Integer=10,
                                         steplength::Real=1f0,
@@ -63,10 +65,7 @@ AbstractProximableFunctions.fun_history(options::ParameterEstimationOptionsDiff)
 """
     parameter_estimation(F, u, d, initial_estimate, options)
 
-Solves the parameter estimation optimization problem (see Section [`Rigid motion parameter estimation`](@ref section-parest) for more details)
-```math
-\\min_{\\theta}
-```
+Solves the rigid-motion parameter estimation optimization problem described [here](@ref section-parest). For optimization options, refer to [`parameter_estimation_options`](@ref)
 """
 function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{CT,3}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{T}, options::ParameterEstimationOptionsDiff) where {T<:Real,CT<:RealOrComplex{T}}
 
