@@ -1,5 +1,30 @@
 # Main functions
 
+## Motion correction
+
+```@docs
+motion_corrected_reconstruction(F::RetrospectiveMotionCorrectionMRI.StructuredNFFTtype2LinOp{T}, d::AbstractArray{CT,2}, u::AbstractArray{CT,3}, θ::AbstractArray{T,2}, options::RetrospectiveMotionCorrectionMRI.MotionCorrectionOptionsAlternatingFISTADiff) where {T<:Real,CT<:RealOrComplex{T}}
+```
+
+```@docs
+motion_correction_options(; image_reconstruction_options::ImageReconstructionOptionsFISTA, parameter_estimation_options::ParameterEstimationOptionsDiff, niter::Integer, niter_estimate_Lipschitz::Union{Nothing,Integer}=nothing, verbose::Bool=false, fun_history::Bool=false)
+```
+
+## Image reconstruction
+
+```@docs
+image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, options::RetrospectiveMotionCorrectionMRI.ImageReconstructionOptionsFISTA) where {CT<:RealOrComplex}
+```
+
+```@docs
+image_reconstruction_options(; prox::AbstractProximableFunction,
+                               Lipschitz_constant::Union{Nothing,Real}=nothing,
+                               Nesterov::Bool=true,
+                               reset_counter::Union{Nothing,Integer}=nothing,
+                               niter::Union{Nothing,Integer}=nothing,
+                               verbose::Bool=false,
+                               fun_history::Bool=false)
+```
 
 ## Rigid motion parameter estimation
 

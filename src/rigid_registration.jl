@@ -15,7 +15,7 @@ scaling_diagonal=0.0, scaling_mean=0.0, verbose=verbose, fun_history=fun_history
                        spatial_geometry=nothing,
                        nscales=1)
 
-Performs the rigid registration of the 3D image `u_moving` with the fixed 3D image `u_fixed`. The user can input a rigid motion parameter `θ` (`nothing` in case no prior knowledge is available), and `options` via [`rigid_registration_options`](@ref). In case the 3D image are associated to a specific spatial discretization, it can be specific with the keyword argument `spatial_geometry`. Multiscale acceleration can be specified with by setting the number of level with the keyword `nscales`.
+Performs the rigid registration of the 3D image `u_moving` with the fixed 3D image `u_fixed`. The user can input a rigid motion parameter `θ` (`nothing` in case no prior knowledge is available), and `options` via [`rigid_registration_options`](@ref). In case the 3D image are associated to a specific spatial discretization, it can be specified with the keyword argument `spatial_geometry`. Multiscale acceleration can be specified with by setting the number of levels with the keyword `nscales` (in this case, each scaled subproblem solver runs `options.niter` iterations).
 """
 function rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, θ::Union{Nothing,AbstractArray{T}}, options::ParameterEstimationOptionsDiff; spatial_geometry::Union{Nothing,CartesianSpatialGeometry{T}}=nothing, nscales::Integer=1) where {T<:Real,CT<:RealOrComplex{T}}
 

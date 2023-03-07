@@ -1,4 +1,4 @@
-using Documenter, AbstractProximableFunctions, FastSolversForWeightedTV, RetrospectiveMotionCorrectionMRI
+using Documenter, AbstractLinearOperators, AbstractProximableFunctions, FastSolversForWeightedTV, RetrospectiveMotionCorrectionMRI
 
 const RealOrComplex{T<:Real} = Union{T, Complex{T}}
 
@@ -6,18 +6,14 @@ format = Documenter.HTML()
 
 Introduction = "Introduction" => "index.md"
 Installation = "Installation" => "installation.md"
+Theory = "Rigid motion correction for MRI" => "theory.md"
 GettingStarted = "Getting started" => "examples.md"
-Fourier = "Motion-perturbed Fourier transform" => "Fourier.md"
-ParameterEstimation = "Rigid motion parameter estimation" => "parameter_estimation.md"
-ImageReconstruction = "Image reconstruction" => "image_reconstruction.md"
 MainFunctions = "Main functions" => "functions.md"
 
 PAGES = [
     Introduction,
     Installation,
-    Fourier,
-    ImageReconstruction,
-    ParameterEstimation,
+    Theory,
     GettingStarted,
     MainFunctions
     ]
