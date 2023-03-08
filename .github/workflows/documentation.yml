@@ -18,6 +18,8 @@ jobs:
         with:
           version: '1.8'
       - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: julia --project=docs/ -e 'using Pkg;
                                        Pkg.add(url="https://github.com/grizzuti/AbstractLinearOperators.git");
                                        Pkg.add(url="https://github.com/grizzuti/AbstractProximableFunctions.git");
