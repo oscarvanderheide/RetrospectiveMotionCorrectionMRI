@@ -23,8 +23,8 @@ jobs:
         run: julia --project=docs/ -e 'using Pkg;
                                        Pkg.add(url="https://github.com/grizzuti/AbstractLinearOperators.git");
                                        Pkg.add(url="https://github.com/grizzuti/AbstractProximableFunctions.git");
-                                       Pkg.add(url="https://github.com/grizzuti/FastSolversForWeightedTV.git");
                                        Pkg.add(url="https://github.com/grizzuti/UtilitiesForMRI.git");
+                                       Pkg.add(url="https://github.com/grizzuti/FastSolversForWeightedTV.git");
                                        Pkg.add(PackageSpec(path=pwd()));
                                        Pkg.instantiate()'
       - name: Build and deploy
