@@ -4,6 +4,7 @@ supplementary/
 *.eps
 *.jld
 Manifest.toml
+data/
 
 
 
