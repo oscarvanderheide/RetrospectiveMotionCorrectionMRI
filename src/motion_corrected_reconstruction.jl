@@ -55,7 +55,7 @@ function motion_corrected_reconstruction(F::StructuredNFFTtype2LinOp{T}, d::Abst
         # Image reconstruction
         options.verbose && (@info string("--- Image reconstruction..."))
         flag_interp ? (θ_ = reshape(Ip*vec(θ), :, 6)) : (θ_ = θ); Fθ = F(θ_)
-        u = image_reconstruction(Fθ, d, u, options_imrecon)
+        u = image_reconstruction(Fθ, d, u, options.options_imrecon)
 
         # Motion-parameter estimation
         (n == options.niter) && break

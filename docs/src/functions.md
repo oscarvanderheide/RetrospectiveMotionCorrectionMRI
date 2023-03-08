@@ -13,7 +13,7 @@ motion_correction_options(; image_reconstruction_options::ImageReconstructionOpt
 ## Image reconstruction
 
 ```@docs
-image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, options::RetrospectiveMotionCorrectionMRI.ImageReconstructionOptionsFISTA) where {CT<:RealOrComplex}
+image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, options::RetrospectiveMotionCorrectionMRI.ImageReconstructionOptionsFISTA) where {T<:Real,CT<:RealOrComplex{T}}
 ```
 
 ```@docs

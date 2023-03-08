@@ -1,4 +1,4 @@
-# Installation instructions
+# [Installation instructions](@id install)
 
 In the Julia REPL, simply type `]` and
 ```julia

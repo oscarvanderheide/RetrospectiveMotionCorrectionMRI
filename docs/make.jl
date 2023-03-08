@@ -1,4 +1,4 @@
-using Documenter, AbstractLinearOperators, AbstractProximableFunctions, FastSolversForWeightedTV, RetrospectiveMotionCorrectionMRI
+using Documenter, AbstractLinearOperators, AbstractProximableFunctions, FastSolversForWeightedTV, UtilitiesForMRI, RetrospectiveMotionCorrectionMRI
 
 const RealOrComplex{T<:Real} = Union{T, Complex{T}}
 

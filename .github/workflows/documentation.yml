@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main # update to match your development branch (master, main, dev, trunk, ...)
-    tags: '*'
+    tags: '1.0.0'
   pull_request:
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
                                        Pkg.add(url="https://github.com/grizzuti/AbstractLinearOperators.git");
                                        Pkg.add(url="https://github.com/grizzuti/AbstractProximableFunctions.git");
                                        Pkg.add(url="https://github.com/grizzuti/FastSolversForWeightedTV.git");
+                                       Pkg.add(url="https://github.com/grizzuti/UtilitiesForMRI.git");
                                        Pkg.add(PackageSpec(path=pwd()));
                                        Pkg.instantiate()'
       - name: Build and deploy
