@@ -1,4 +1,4 @@
-using LinearAlgebra, RetrospectiveMotionCorrectionMRI, AbstractProximableFunctions, FastSolversForWeightedTV, UtilitiesForMRI, PyPlot, JLD
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, AbstractProximableFunctions, FastSolversForWeightedTV, UtilitiesForMRI, PythonPlot, JLD
 
 # Load data
 results_folder = string(pwd(), "/paper/ScanReconVsRawData2/")

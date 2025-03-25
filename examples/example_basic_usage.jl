@@ -1,4 +1,4 @@
-using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, AbstractProximableFunctions, LinearAlgebra, PyPlot
+using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, AbstractProximableFunctions, LinearAlgebra, PythonPlot
 
 # Spatial geometry
 fov = (1f0, 2f0, 2f0)
