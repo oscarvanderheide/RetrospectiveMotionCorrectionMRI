@@ -11,6 +11,12 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 UtilitiesForMRI = "5f442635-cb9d-4e13-b358-1c870cfef0cf"
 
+[sources]
+AbstractLinearOperators = {rev = "oscar/v1-to-julia-v1.11", url = "https://github.com/oscarvanderheide/AbstractLinearOperators.jl"}
+AbstractProximableFunctions = {url = "https://github.com/oscarvanderheide/AbstractProximableFunctions"}
+FastSolversForWeightedTV = {url = "https://github.com/oscarvanderheide/FastSolversForWeightedTV"}
+UtilitiesForMRI = {url = "https://github.com/oscarvanderheide/UtilitiesForMRI"}
+
 [compat]
 julia = "1.8"
 
