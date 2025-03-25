@@ -8,6 +8,7 @@ AbstractLinearOperators = "bb902dec-a34b-4f3c-9707-4856bea60ee0"
 AbstractProximableFunctions = "9ed10759-246d-4065-822b-90d32585fe69"
 FastSolversForWeightedTV = "3521e485-16e8-49c3-934a-dec609b578e8"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 UtilitiesForMRI = "5f442635-cb9d-4e13-b358-1c870cfef0cf"
 
@@ -18,7 +19,8 @@ FastSolversForWeightedTV = {url = "https://github.com/oscarvanderheide/FastSolve
 UtilitiesForMRI = {url = "https://github.com/oscarvanderheide/UtilitiesForMRI"}
 
 [compat]
-julia = "1.8"
+PythonPlot = "1.0.6"
+julia = "1.11"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
