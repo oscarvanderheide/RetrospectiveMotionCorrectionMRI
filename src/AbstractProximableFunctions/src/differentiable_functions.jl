@@ -122,7 +122,7 @@ end
 function fungradeval!(f::LeastSquaresMisfit{T,N1,N2}, x::AT, gradient::AT) where {T<:RealOrComplex,N1,N2,AT<:AbstractArray{T,N1}}
     r = f.linear_operator*x-f.known_term
     gradient .= f.linear_operator'*r
-    return norm(f.linear_operator*x-f.known_term)^2/2
+    return norm(r)^2/2
 end
 
 
