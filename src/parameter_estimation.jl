@@ -86,7 +86,7 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         # Data misfit
         if options.calibration
             α = sum(conj(Fθu).*d; dims=2)./sum(abs.(Fθu).^2; dims=2)
-            A = linear_operator(Complex{T}, size(d), size(d), d->α.*d, d->conj(α).*d)
+            A = linear_operator(Complex{T}, size(d), Complex{T}, size(d), d->α.*d, d->conj(α).*d)
         else
             A = identity_operator(Complex{T}, size(d))
         end

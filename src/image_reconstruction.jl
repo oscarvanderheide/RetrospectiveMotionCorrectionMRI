@@ -56,6 +56,8 @@ function image_reconstruction(F::AbstractLinearOperator{CT,3,CT,2}, d::AbstractA
     if ~isnothing(options.niter_estimate_Lipschitz)
         L = T(1.1)*spectral_radius(F*F'; niter=options.niter_estimate_Lipschitz)
         opt_FISTA = set_Lipschitz_constant(options.options, L)
+    else
+        opt_FISTA = options.options
     end
     return leastsquares_solve(F, d, options.prox, initial_estimate, opt_FISTA)
 end
