@@ -64,7 +64,9 @@ function main()
     @info "Number of time instances: $(nt)"
 
     # NUFFT encoding operator: (image, motion pars per time) -> k-space
-    F = nfft_linop(X, K)
+    # tol = NUFFT accuracy. 1f-4 is ~3x faster than the library default (1f-6, which is also at the
+    # limit of single precision) and changed results by ~3e-5 (relative) in our tests
+    F = nfft_linop(X, K; tol=1f-4)
 
     # Zero motion here, just used to sample k-space from the corrupted image
     θ_true = zeros(Float32, nt, 6)
@@ -87,6 +89,16 @@ function main()
 
     # Number of movements you estimate the patient did
     nMovements = 128;
+
+    # Optional speed/accuracy settings (both off = previous behavior; both change the result):
+    # - warmstart: start each TV-constraint projection from the previous solution. With the default 10
+    #   inner iterations the projection is far from converged; warm starting makes it much more accurate
+    #   at the same cost (or allows fewer inner iterations, see opt_inner below). Results then depend
+    #   on the history of previous calls
+    # - toeplitz: evaluate F'F with FFTs instead of NUFFTs during image reconstruction (~15% faster
+    #   image reconstruction on CPU, needs 2 extra arrays of 8x the image size in memory)
+    warmstart = false
+    toeplitz  = false
 
     for (iter_l, iter_l2) in zip(L_vec, L2_vec)
             
@@ -111,7 +123,7 @@ function main()
         @info "eta: " * string(η)
         P = structural_weight(ground_truth; η=η) # reference guide
 
-        g = gradient_norm(2,1,size(ground_truth), h; complex=true, weight=P, options=opt_inner)
+        g = gradient_norm(2,1,size(ground_truth), h; complex=true, weight=P, options=opt_inner, warmstart=warmstart)
 
         # L1 (-> ε) = how much detail/noise we allow;
         ε = iter_l * g(ground_truth) 
@@ -124,7 +136,8 @@ function main()
             niter=LoopIters[1],    # Tweek
             niter_estimate_Lipschitz=3,
             verbose=true,
-            fun_history=true
+            fun_history=true,
+            toeplitz=toeplitz
         )
 
         # Interpolates motion pars from nMovements nodes to full nt resolution
