@@ -7,6 +7,7 @@ using RetrospectiveMotionCorrectionMRI, Test
     include("./test_nfft_jacobian.jl")
     include("./test_gauss_newton.jl")
     include("./test_parameter_estimation_calibration.jl")
+    include("./test_toeplitz.jl")
     include("./test_imagequality_utils.jl")
     include("./test_image_reconstruction.jl")
     include("./test_parameter_estimation.jl")

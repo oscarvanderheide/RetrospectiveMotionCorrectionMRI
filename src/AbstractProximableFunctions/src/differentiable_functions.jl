@@ -2,6 +2,7 @@
 
 export ProxObjFun, ProjObjFun, prox_objfun, proj_objfun
 export LeastSquaresMisfit, leastsquares_misfit, leastsquares_solve, leastsquares_solve!
+export NormalEquationsMisfit, normal_equations_misfit
 
 
 ## Differentiable function linear algebra
@@ -123,6 +124,33 @@ function fungradeval!(f::LeastSquaresMisfit{T,N1,N2}, x::AT, gradient::AT) where
     r = f.linear_operator*x-f.known_term
     gradient .= f.linear_operator'*r
     return norm(r)^2/2
+end
+
+
+## Least-squares misfit via normal equations
+#
+# f(x) = 1/2||Ax-y||^2 = 1/2<x,A'Ax>-Re<x,A'y>+1/2||y||^2, evaluated with a (cheaper) normal
+# operator N = A'A and the precomputed A'y. Note: the function value is computed as a difference
+# of terms and loses relative accuracy when the residual is small compared to ||y||.
+
+struct NormalEquationsMisfit{T,N}<:AbstractDifferentiableFunction{T,N}
+    normal_operator::AbstractLinearOperator{T,N,T,N}
+    Aty::AbstractArray{T,N}
+    norm2_y::Real
+end
+
+normal_equations_misfit(AtA::AbstractLinearOperator{T,N,T,N}, Aty::AbstractArray{T,N}, norm2_y::Real) where {T,N} = NormalEquationsMisfit{T,N}(AtA, Aty, norm2_y)
+
+funeval(f::NormalEquationsMisfit{T,N}, x::AbstractArray{T,N}) where {T<:RealOrComplex,N} = real(dot(x, f.normal_operator*x))/2-real(dot(x, f.Aty))+f.norm2_y/2
+
+function gradeval!(f::NormalEquationsMisfit{T,N}, x::AT, gradient::AT) where {T<:RealOrComplex,N,AT<:AbstractArray{T,N}}
+    gradient .= f.normal_operator*x.-f.Aty
+    return gradient
+end
+
+function fungradeval!(f::NormalEquationsMisfit{T,N}, x::AT, gradient::AT) where {T<:RealOrComplex,N,AT<:AbstractArray{T,N}}
+    gradient .= f.normal_operator*x.-f.Aty
+    return real(dot(x, gradient.-f.Aty))/2+f.norm2_y/2
 end
 
 
