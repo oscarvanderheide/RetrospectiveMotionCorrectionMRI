@@ -8,6 +8,7 @@
 #
 # but with fused multithreaded kernels, preallocated workspaces, and an exact finite-step
 # (Michelot) computation of the L21-ball projection threshold instead of a Brent root search.
+# Optionally, the dual variable is warm-started from the previous call (see `gradient_norm`).
 
 
 # (defined for concrete element types to avoid method ambiguities with the generic implementation)
@@ -29,6 +30,9 @@ function weighted_tv_dual_fista(A::WeightedGradientOperator{CT,3,4}, y::Array{CT
     p     = zeros(CT, range_size(A)) # current (extrapolated) iterate
     p_    = similar(p)               # proximal step
     pprev = zeros(CT, range_size(A))
+    if A.warmstart && (A.dual[] isa Array{CT,4}) && (size(A.dual[]) == size(p))
+        copyto!(p, A.dual[]); copyto!(pprev, p)
+    end
     G     = similar(p)               # gradient
     r     = similar(y)               # residual (P∇)'p-y
     ptn   = Array{T,3}(undef, size(p)[1:3])
@@ -69,6 +73,7 @@ function weighted_tv_dual_fista(A::WeightedGradientOperator{CT,3,4}, y::Array{CT
 
     end
 
+    A.warmstart && (A.dual[] = p)
     return p
 
 end

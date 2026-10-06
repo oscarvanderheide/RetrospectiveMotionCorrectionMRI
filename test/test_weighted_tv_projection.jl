@@ -42,4 +42,33 @@ Random.seed!(123)
     y = randn(Float32, n)
     @test APF.proj!(y, 0.5f0*g(y), g, g.options, similar(y)) isa Matrix{Float32}
 
+    # Warm start (opt-in)
+    for T = [Float32, Float64]
+        n = (14, 12, 10); h = (T(1), T(1), T(1))
+        CT = Complex{T}
+        P = structural_weight(randn(CT, n); η=T(0.1))
+        opt = FISTA_options(4*sum(1 ./h.^2); Nesterov=true, niter=5)
+        opt_ref = FISTA_options(4*sum(1 ./h.^2); Nesterov=true, niter=2000)
+        g_cold = gradient_norm(2, 1, n, h; complex=true, weight=P, options=opt)
+        g_warm = gradient_norm(2, 1, n, h; complex=true, weight=P, options=opt, warmstart=true)
+        y = randn(CT, n); ε = T(0.2)*g_cold(y)
+        x_ref  = APF.proj!(y, ε, g_cold, opt_ref, similar(y))
+        x_cold = APF.proj!(y, ε, g_cold, opt, similar(y))
+        tol = T == Float32 ? 1e-5 : 1e-12
+        # first call is identical to a cold start
+        @test APF.proj!(y, ε, g_warm, opt, similar(y)) ≈ x_cold rtol=tol
+        # repeated calls on (nearly) the same input get more accurate
+        err = Float64[]
+        for _ = 1:5
+            push!(err, norm(APF.proj!(y, ε, g_warm, opt, similar(y))-x_ref)/norm(x_ref))
+        end
+        @test err[end] < err[1]
+        @test err[end] < norm(x_cold-x_ref)/norm(x_ref)
+        # reset restores cold-start behavior
+        reset_warmstart!(g_warm)
+        @test APF.proj!(y, ε, g_warm, opt, similar(y)) ≈ x_cold rtol=tol
+        # default is no warm start: repeated calls give identical results
+        @test APF.proj!(y, ε, g_cold, opt, similar(y)) == x_cold
+    end
+
 end

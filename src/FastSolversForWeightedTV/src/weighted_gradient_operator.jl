@@ -14,16 +14,18 @@ struct WeightedGradientOperator{T,N,M}<:AbstractLinearOperator{T,N,T,M}
     h::NTuple{N,Any}
     weight::Union{Nothing,ProjVectorField{T,M}}
     buffer::Base.RefValue{Any} # workspace for the adjoint
+    warmstart::Bool            # warm start of the dual TV-ball projection solver (see weighted_tv_projection.jl)
+    dual::Base.RefValue{Any}   # last dual solution (only used if warmstart=true)
 end
 
 """
-    weighted_gradient_operator(T, n, h; weight=nothing)
+    weighted_gradient_operator(T, n, h; weight=nothing, warmstart=false)
 
-Returns the linear operator ``\\mathbf{u}\\mapsto P\\nabla\\mathbf{u}`` (forward differences) for element type `T`, grid size `n` and spacing `h`. `weight` is either `nothing` (``P=I``) or a `ProjVectorField` as returned by [`structural_weight`](@ref).
+Returns the linear operator ``\\mathbf{u}\\mapsto P\\nabla\\mathbf{u}`` (forward differences) for element type `T`, grid size `n` and spacing `h`. `weight` is either `nothing` (``P=I``) or a `ProjVectorField` as returned by [`structural_weight`](@ref). For `warmstart`, see [`gradient_norm`](@ref).
 """
-function weighted_gradient_operator(::Type{CT}, n::NTuple{N,Int64}, h::NTuple{N,T}; weight::Union{Nothing,ProjVectorField}=nothing) where {T<:Real,N,CT<:RealOrComplex{T}}
+function weighted_gradient_operator(::Type{CT}, n::NTuple{N,Int64}, h::NTuple{N,T}; weight::Union{Nothing,ProjVectorField}=nothing, warmstart::Bool=false) where {T<:Real,N,CT<:RealOrComplex{T}}
     ~isnothing(weight) && (size(weight.ξ) != ((n.-1)..., N)) && throw(ArgumentError("Weight size $(size(weight.ξ)) not consistent with gradient range $(((n.-1)..., N))"))
-    return WeightedGradientOperator{CT,N,N+1}(n, h, weight, Ref{Any}(nothing))
+    return WeightedGradientOperator{CT,N,N+1}(n, h, weight, Ref{Any}(nothing), warmstart, Ref{Any}(nothing))
 end
 
 AbstractLinearOperators.domain_size(A::WeightedGradientOperator) = A.n
