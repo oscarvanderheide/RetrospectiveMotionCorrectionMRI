@@ -139,13 +139,26 @@ function AbstractLinearOperators.matvecprod(∂Fu::JacobianStructuredNFFTtype2{T
 end
 Base.:*(∂Fu::JacobianStructuredNFFTtype2{T}, Δθ::AbstractArray{T,2}) where {T<:Real} = ∂Fu*complex(Δθ)
 AbstractLinearOperators.matvecprod_adj(∂Fu::JacobianStructuredNFFTtype2{T}, Δd::AbstractArray{Complex{T},2}) where {T<:Real} = real(sum(conj(∂Fu.∂F).*Δd; dims=2)[:,1,:])
+function AbstractLinearOperators.matvecprod_adj(∂Fu::JacobianStructuredNFFTtype2{T}, Δd::Array{Complex{T},2}) where {T<:Real}
+    J = ∂Fu.∂F
+    J isa Array || return real(sum(conj(J).*Δd; dims=2)[:,1,:])
+    nt, nk, np = size(J)
+    g = Array{T,2}(undef, nt, np)
+    Threads.@threads for i = 1:np
+        acc = zeros(Float64, nt)
+        @inbounds for k = 1:nk, t = 1:nt
+            acc[t] += real(conj(J[t,k,i])*Δd[t,k])
+        end
+        g[:,i] .= acc
+    end
+    return g
+end
 
 
 ## Other utilities
 
 function sparse_matrix_GaussNewton(∂F::JacobianStructuredNFFTtype2{T}; W::Union{Nothing,AbstractLinearOperator}=nothing, H::Union{Nothing,AbstractLinearOperator}=nothing) where {T<:Real}
     J = ∂F.∂F
-    GN = similar(J, T, size(J, 1), 6, 6)
     if ~isnothing(W)
         WJ = similar(J)
         @inbounds for i = 1:6
@@ -162,8 +175,35 @@ function sparse_matrix_GaussNewton(∂F::JacobianStructuredNFFTtype2{T}; W::Unio
     else
         HWJ = WJ
     end
+    GN = gauss_newton_blocks(WJ, HWJ; symmetric=isnothing(H))
+    # Block (i,j) of the Hessian is diagm(GN[:,i,j])
+    nt = size(J, 1)
+    rows = vec([(i-1)*nt+t for t = 1:nt, i = 1:6, j = 1:6])
+    cols = vec([(j-1)*nt+t for t = 1:nt, i = 1:6, j = 1:6])
+    return sparse(rows, cols, vec(GN), 6*nt, 6*nt)
+end
+
+# GN[t,i,j] = real(sum_k conj(A[t,k,i])*B[t,k,j])
+function gauss_newton_blocks(A::AbstractArray{Complex{T},3}, B::AbstractArray{Complex{T},3}; symmetric::Bool=false) where {T<:Real}
+    GN = similar(A, T, size(A, 1), 6, 6)
     @inbounds for i = 1:6, j = 1:6
-        GN[:,i,j] = vec(real(sum(conj(WJ[:,:,i]).*HWJ[:,:,j]; dims=2)))
+        GN[:,i,j] = vec(real(sum(conj(A[:,:,i]).*B[:,:,j]; dims=2)))
     end
-    return hvcat(6, [spdiagm(0 => GN[:,i,j]) for j=1:6,i=1:6]...)
+    return GN
+end
+
+function gauss_newton_blocks(A::Array{Complex{T},3}, B::Array{Complex{T},3}; symmetric::Bool=false) where {T<:Real}
+    nt, nk, _ = size(A)
+    GN = Array{T,3}(undef, nt, 6, 6)
+    pairs = [(i, j) for i = 1:6 for j = (symmetric ? i : 1):6]
+    Threads.@threads for p in eachindex(pairs)
+        i, j = pairs[p]
+        acc = zeros(Float64, nt)
+        @inbounds for k = 1:nk, t = 1:nt
+            acc[t] += real(conj(A[t,k,i])*B[t,k,j])
+        end
+        GN[:,i,j] .= acc
+        symmetric && (GN[:,j,i] .= acc)
+    end
+    return GN
 end

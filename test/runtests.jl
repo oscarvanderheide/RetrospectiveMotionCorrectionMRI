@@ -5,6 +5,7 @@ using RetrospectiveMotionCorrectionMRI, Test
     include("./test_weighted_tv_projection.jl")
     include("./test_leastsquares_misfit.jl")
     include("./test_nfft_jacobian.jl")
+    include("./test_gauss_newton.jl")
     include("./test_imagequality_utils.jl")
     include("./test_image_reconstruction.jl")
     include("./test_parameter_estimation.jl")
