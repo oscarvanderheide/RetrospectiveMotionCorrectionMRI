@@ -23,8 +23,12 @@ Complex or real inputs are handled via the keyword `complex`. Set `complex=true`
 For the evaluation of the associated proximal operator, one must specify a solver with the keyword `options`. Dedicated solvers are offered by the package `AbstractProximableFunctions.jl` (e.g. FISTA, see Section [Getting started](@ref) for some basic usage options).
 """
 function gradient_norm(P1::Number, P2::Number, n::NTuple{N,Int64}, h::NTuple{N,T}; weight::Union{Nothing,AbstractLinearOperator}=nothing, pareto_tol::Union{Nothing,Real}=nothing, complex::Bool=false, options::AbstractArgminOptions=exact_argmin()) where {T<:Real,N}
-    ∇ = gradient_operator(n, h; complex=complex)
-    weight !== nothing ? (A∇ = weight*∇) : (A∇ = ∇)
     complex ? (CT = Complex{T}) : (CT = T)
+    if isnothing(weight) || weight isa ProjVectorField{CT,N+1}
+        A∇ = weighted_gradient_operator(CT, n, h; weight=weight) # fused evaluation
+    else
+        ∇ = gradient_operator(n, h; complex=complex)
+        A∇ = weight*∇
+    end
     return weighted_prox(mixed_norm(CT,N,P1,P2; pareto_tol=pareto_tol), A∇; options=options)
 end

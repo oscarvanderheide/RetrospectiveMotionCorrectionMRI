@@ -9,5 +9,6 @@ const RealOrComplex{T<:Real} = Union{T,Complex{T}}
 include("./gradient_norm.jl")
 include("./gradient_operator.jl")
 include("./weighting_operator.jl")
+include("./weighted_gradient_operator.jl")
 
 end
