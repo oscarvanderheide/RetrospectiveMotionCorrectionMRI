@@ -62,7 +62,10 @@ function prox!(y::AT, λ::T, g::WeightedProximableFunction{CT,N}, options::Argmi
 
 end
 
-function proj!(y::AT, ε::T, g::WeightedProximableFunction{CT,N}, options::ArgminFISTA, x::AT) where {T<:Real,N,CT<:RealOrComplex{T},AT<:AbstractArray{CT,N}}
+proj!(y::AT, ε::T, g::WeightedProximableFunction{CT,N}, options::ArgminFISTA, x::AT) where {T<:Real,N,CT<:RealOrComplex{T},AT<:AbstractArray{CT,N}} = proj_weighted_dual_fista!(y, ε, g, options, x)
+
+# Generic implementation (specialized versions may exist for specific weighted functions, see e.g. FastSolversForWeightedTV)
+function proj_weighted_dual_fista!(y::AT, ε::T, g::WeightedProximableFunction{CT,N}, options::ArgminFISTA, x::AT) where {T<:Real,N,CT<:RealOrComplex{T},AT<:AbstractArray{CT,N}}
 
     # Objective function (dual problem)
     f = leastsquares_misfit(g.linear_operator', y)+conjugate(indicator(g.prox ≤ ε))

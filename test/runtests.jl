@@ -2,6 +2,7 @@ using RetrospectiveMotionCorrectionMRI, Test
 
 @testset "RetrospectiveMotionCorrectionMRI.jl" begin
     include("./test_weighted_gradient_operator.jl")
+    include("./test_weighted_tv_projection.jl")
     include("./test_imagequality_utils.jl")
     include("./test_image_reconstruction.jl")
     include("./test_parameter_estimation.jl")
