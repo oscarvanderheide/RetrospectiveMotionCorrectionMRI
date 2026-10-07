@@ -14,7 +14,7 @@ for D = 1:3, batch = [false, true], device = (RUN_GPU_TESTS ? [:cpu, :gpu] : [:c
     # Gradient operator
     h = Tuple(abs.(randn(T, D)))
     CT = complex ? Complex{T} : T
-    ∇ = gradient_operator(CT, h; batch=batch)
+    ∇ = RetrospectiveMotionCorrectionMRI.AbstractLinearOperators.gradient_operator(CT, h; batch=batch) # (name also exported by FastSolversForWeightedTV)
 
     # Adjoint test
     size_in = batch ? (input_size*ones(Integer, D)..., 1, nb) : Tuple(input_size*ones(Integer, D))
