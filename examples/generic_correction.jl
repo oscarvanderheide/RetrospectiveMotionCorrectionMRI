@@ -6,6 +6,14 @@ using StatsBase
 import PythonPlot as pp
 using MAT, Statistics
 
+# Run on an NVIDIA GPU? Requires CUDA.jl and NonuniformFFTs.jl in the script environment
+# (] add CUDA NonuniformFFTs). Results agree with the CPU up to the NUFFT accuracy.
+const use_gpu = false
+use_gpu && @eval using CUDA, NonuniformFFTs
+to_gpu(x::AbstractArray) = use_gpu ? CUDA.CuArray(x) : x # images and data
+to_gpu(F) = use_gpu ? CUDA.cu(F) : F                       # NUFFT operator
+to_cpu(x) = Array(x)
+
 function main()
     # CODE:
     # Create a route to the folder where your scans are
@@ -73,6 +81,9 @@ function main()
     ground_truth = referenceImage; 
     
     d = F(θ_true)*MtnCorruptedImage;
+
+    # Move operator, data and reference to the GPU (no-op if use_gpu = false); motion parameters stay on the CPU
+    F = to_gpu(F); d = to_gpu(d); ground_truth = to_gpu(ground_truth)
 
     # L1 (-> ε) controls how much detail/noise is allowed in the image: it sets a
     # threshold to remove most of the noise without erasing important information.
@@ -170,7 +181,7 @@ function main()
         u_conventional = F' * d
 
         θ0 = zeros(Float32, length(ti), 6)  # Initial guess for motion parameters (zero motion)
-        u0 = zeros(ComplexF32, n)           # Initial image estimate
+        u0 = to_gpu(zeros(ComplexF32, n))   # Initial image estimate
 
         u, θ = motion_corrected_reconstruction(F, d, u0, θ0, options)   # Run alternating reconstruction (joint image + motion estimation)
         θ = reshape(Ip*vec(θ), length(t), 6)    # Interpolate estimated motion parameters to full temporal resolution
@@ -178,8 +189,8 @@ function main()
         # Created dictionary for the name of the matlab variables and store results in string_out file
         outputdata = Dict();
         outputdata["im_motion_parameters"] = θ      # Motion params estimated by the algorithm ( 6 DoF per time instant(t->traslation; r->rotation): tX, tY, tZ, rX, rY, rZ)
-        outputdata["corrected_image_after"] = u;    # Corrected image 
-        outputdata["corrected_image_before"] = u_conventional;  # Original image
+        outputdata["corrected_image_after"] = to_cpu(u);    # Corrected image 
+        outputdata["corrected_image_before"] = to_cpu(u_conventional);  # Original image
         
         MAT.matwrite(basepath * string_out * ".mat", outputdata)
         
