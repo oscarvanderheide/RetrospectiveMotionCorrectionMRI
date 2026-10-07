@@ -3,7 +3,7 @@ Random.seed!(123)
 
 # Random data
 T = Complex{Float64}
-n = 32
+n = 16
 t = 1e-4
 rtol = 10*t
 

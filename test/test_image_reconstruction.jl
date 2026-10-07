@@ -2,7 +2,7 @@ using RetrospectiveMotionCorrectionMRI, RetrospectiveMotionCorrectionMRI.FastSol
 
 # Spatial geometry
 fov = (1f0, 2f0, 2f0)
-n = (64, 64, 64)
+n = (32, 32, 32)
 o = (0.5f0, 0.5f0, 0.5f0)
 X = spatial_geometry(fov, n; origin=o)
 
@@ -16,7 +16,7 @@ tol = 1f-6
 F = nfft_linop(X, K; tol=tol)
 
 # Setting ground-truth and data
-ground_truth = zeros(ComplexF32, n); ground_truth[div(64,2)+1-10:div(64,2)+1+10, div(64,2)+1-10:div(64,2)+1+10, div(64,2)+1-10:div(64,2)+1+10] .= 1
+ground_truth = zeros(ComplexF32, n); ground_truth[div(32,2)+1-5:div(32,2)+1+5, div(32,2)+1-5:div(32,2)+1+5, div(32,2)+1-5:div(32,2)+1+5] .= 1
 d = F*ground_truth
 p = 40f0 # dB
 noise = 10^(-p/20)*norm(d,Inf)*randn(ComplexF32,size(d))
@@ -26,9 +26,9 @@ dnoise = d+noise
 h = spacing(X); LD = 4f0*sum(1 ./h.^2)
 opt_inner = FISTA_options(LD; Nesterov=true, niter=20)
 g = gradient_norm(2, 1, size(ground_truth), h; complex=true, options=opt_inner)
-x = reshape(range(-1f0, 1f0; length=64), :, 1, 1)
-y = reshape(range(-1f0, 1f0; length=64), 1, :, 1)
-z = reshape(range(-1f0, 1f0; length=64), 1, 1, :)
+x = reshape(range(-1f0, 1f0; length=32), :, 1, 1)
+y = reshape(range(-1f0, 1f0; length=32), 1, :, 1)
+z = reshape(range(-1f0, 1f0; length=32), 1, 1, :)
 r = sqrt.(x.^2 .+y.^2 .+z.^2)
 C = zero_set(ComplexF32, r .< 0.1f0)
 ε = g(ground_truth)
