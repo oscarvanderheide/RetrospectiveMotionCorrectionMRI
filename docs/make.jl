@@ -1,4 +1,4 @@
-using Documenter, AbstractLinearOperators, AbstractProximableFunctions, FastSolversForWeightedTV, UtilitiesForMRI, RetrospectiveMotionCorrectionMRI
+using Documenter, RetrospectiveMotionCorrectionMRI
 
 const RealOrComplex{T<:Real} = Union{T, Complex{T}}
 
@@ -24,9 +24,10 @@ makedocs(
     authors = "Gabrio Rizzuti",
     format = format,
     checkdocs = :exports,
+    warnonly = [:missing_docs, :cross_references],
     pages = PAGES
 )
 
 deploydocs(
-    repo = "github.com/grizzuti/RetrospectiveMotionCorrectionMRI.jl.git",
+    repo = "github.com/oscarvanderheide/RetrospectiveMotionCorrectionMRI.git",
 )

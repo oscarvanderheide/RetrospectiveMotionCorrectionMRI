@@ -1,11 +1,11 @@
 # [Installation instructions](@id install)
 
-In the Julia REPL, simply type `]` and
+In the Julia REPL, type `]` and
+
 ```julia
-(@v1.8) pkg> add https://github.com/grizzuti/AbstractLinearOperators.git
-(@v1.8) pkg> add https://github.com/grizzuti/AbstractProximableFunctions.git
-(@v1.8) pkg> add https://github.com/grizzuti/FastSolversForWeightedTV.git
-(@v1.8) pkg> add https://github.com/grizzuti/UtilitiesForMRI.git
-(@v1.8) pkg> add https://github.com/grizzuti/RetrospectiveMotionCorrectionMRI.git
+pkg> add https://github.com/oscarvanderheide/RetrospectiveMotionCorrectionMRI
 ```
-The packages `AbstractLinearOperators`, `AbstractProximableFunctions`, `FastSolversForWeightedTV`, and `UtilitiesForMRI` have to be explicitly installed since they are unregistered at the moment.
+
+The package is self-contained: `AbstractLinearOperators`, `AbstractProximableFunctions`, `FastSolversForWeightedTV` and `UtilitiesForMRI`, which used to be separate (unregistered) packages, are included as submodules and re-exported by `RetrospectiveMotionCorrectionMRI`.
+
+For GPU support, also install [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) and [NonuniformFFTs.jl](https://github.com/jipolanco/NonuniformFFTs.jl) (see the README).
