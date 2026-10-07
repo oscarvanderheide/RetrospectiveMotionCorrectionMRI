@@ -1,4 +1,4 @@
-#: Fast projection on the (structurally weighted) TV ball, for 3D CPU arrays
+#: Fast projection on the (structurally weighted) TV ball, for 3D arrays (CPU or GPU)
 #
 # Specialization of `proj!(y, ε, g::WeightedProximableFunction, options::ArgminFISTA, x)` for
 # g(u) = ||P∇u||_{2,1} (as returned by `gradient_norm(2, 1, ...)`). It performs exactly the same
@@ -6,36 +6,32 @@
 #
 #   min_p 1/2||(P∇)'p-y||^2+δ*_{||.||_{2,1}≤ε}(p),    x = y-(P∇)'p,
 #
-# but with fused multithreaded kernels, preallocated workspaces, and an exact finite-step
-# (Michelot) computation of the L21-ball projection threshold instead of a Brent root search.
+# but with fused kernels (multithreaded loops for CPU arrays, broadcasting otherwise, e.g. on GPU),
+# preallocated workspaces, and an exact finite-step (Michelot) computation of the L21-ball
+# projection threshold instead of a Brent root search.
 # Optionally, the dual variable is warm-started from the previous call (see `gradient_norm`).
 
 
-# (defined for concrete element types to avoid method ambiguities with the generic implementation)
-for CT = (Float32, Float64, ComplexF32, ComplexF64)
-    T = real(CT)
-    @eval function AbstractProximableFunctions.proj!(y::Array{$CT,3}, ε::$T, g::WeightedProximableFunction{$CT,3,4}, options::ArgminFISTA, x::Array{$CT,3})
-        A = g.linear_operator
-        fast = (A isa WeightedGradientOperator{$CT,3,4}) && (g.prox isa ProximableMixedNorm{$CT,4,2,1}) && (isnothing(A.weight) || A.weight.ξ isa Array{$CT,4})
-        fast || return AbstractProximableFunctions.proj_weighted_dual_fista!(y, ε, g, options, x)
-        p = weighted_tv_dual_fista(A, y, ε, options)
-        weighted_gradient_adj!(x, A, p)
-        return x .= y.-x
-    end
+function AbstractProximableFunctions.weighted_proj!(y::AbstractArray{CT,3}, ε::Real, g::WeightedProximableFunction, A::WeightedGradientOperator{CT,3,4}, ::ProximableMixedNorm{CT,4,2,1}, options::ArgminFISTA, x::AbstractArray{CT,3}) where {CT<:RealOrComplex}
+    # Weight and input must live on the same device
+    ~isnothing(A.weight) && ~(A.weight.ξ isa typeof(similar(y, CT, size(A.weight.ξ)))) && return AbstractProximableFunctions.proj_weighted_dual_fista!(y, ε, g, options, x)
+    p = weighted_tv_dual_fista(A, y, real(CT)(ε), options)
+    weighted_gradient_adj!(x, A, p)
+    return x .= y.-x
 end
 
-function weighted_tv_dual_fista(A::WeightedGradientOperator{CT,3,4}, y::Array{CT,3}, ε::T, options::ArgminFISTA) where {T<:Real,CT<:RealOrComplex{T}}
+function weighted_tv_dual_fista(A::WeightedGradientOperator{CT,3,4}, y::AbstractArray{CT,3}, ε::T, options::ArgminFISTA) where {T<:Real,CT<:RealOrComplex{T}}
 
     # Workspaces
-    p     = zeros(CT, range_size(A)) # current (extrapolated) iterate
-    p_    = similar(p)               # proximal step
-    pprev = zeros(CT, range_size(A))
-    if A.warmstart && (A.dual[] isa Array{CT,4}) && (size(A.dual[]) == size(p))
+    p     = fill!(similar(y, CT, range_size(A)), 0) # current (extrapolated) iterate
+    p_    = similar(p)                              # proximal step
+    pprev = fill!(similar(p), 0)
+    if A.warmstart && (A.dual[] isa typeof(p)) && (size(A.dual[]) == size(p))
         copyto!(p, A.dual[]); copyto!(pprev, p)
     end
     G     = similar(p)               # gradient
     r     = similar(y)               # residual (P∇)'p-y
-    ptn   = Array{T,3}(undef, size(p)[1:3])
+    ptn   = similar(y, T, size(p)[1:3])
 
     L = T(options.Lipschitz_constant)
     counter = isnothing(options.reset_counter) ? nothing : 0
@@ -106,6 +102,16 @@ function conjugate_ball_prox!(p_::Array{CT,4}, p::Array{CT,4}, G::Array{CT,4}, L
     return p_
 end
 
+function conjugate_ball_prox!(p_::AbstractArray{CT,4}, p::AbstractArray{CT,4}, G::AbstractArray{CT,4}, L::T, ε::T, ptn::AbstractArray{T,3}) where {T<:Real,CT<:RealOrComplex{T}}
+    η2 = 3*eps(T)^2
+    z = p.-G./L
+    ptn .= dropdims(sqrt.(sum(abs2.(L.*z); dims=4).+η2); dims=4)
+    λ = l1ball_threshold(ptn, ε)
+    s = ifelse.(ptn .>= λ, 1 .-λ./ptn, zero(T))
+    p_ .= z.-reshape(s, size(s)..., 1).*(L.*z)./L
+    return p_
+end
+
 """
     l1ball_threshold(a, ε)
 
@@ -139,8 +145,10 @@ function sum_count_above(a::Array{T}, λ::T) where {T<:Real}
     return sum(sums), sum(counts)
 end
 
-sum_count_above(a::AbstractArray{T}, λ::T) where {T<:Real} = (idx = a .> λ; (Float64(sum(a[idx]; init=zero(T))), count(idx)))
+sum_count_above(a::AbstractArray{T}, λ::T) where {T<:Real} = (Float64(sum(x -> ifelse(x > λ, x, zero(x)), a)), count(>(λ), a))
 
+# Elementwise map (threaded for CPU arrays)
+tmap!(f, out::AbstractArray, args::AbstractArray...) = (out .= f.(args...))
 # Threaded elementwise map (CPU arrays)
 function tmap!(f, out::Array, args::Array...)
     N = length(out)

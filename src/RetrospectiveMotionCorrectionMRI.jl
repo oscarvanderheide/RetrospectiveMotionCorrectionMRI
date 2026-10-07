@@ -15,6 +15,7 @@ include("FastSolversForWeightedTV/src/FastSolversForWeightedTV.jl")
 @reexport using .UtilitiesForMRI
 @reexport using .AbstractProximableFunctions
 @reexport using .FastSolversForWeightedTV
+using .UtilitiesForMRI: on_device_of
 
 const RealOrComplex{T<:Real} = Union{T,Complex{T}}
 

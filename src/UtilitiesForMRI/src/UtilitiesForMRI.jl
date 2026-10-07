@@ -1,6 +1,6 @@
 module UtilitiesForMRI
 
-using LinearAlgebra, SparseArrays, FINUFFT, FFTW, PythonPlot, ImageFiltering, Dierckx, ImageQualityIndexes
+using LinearAlgebra, SparseArrays, FINUFFT, FFTW, PythonPlot, ImageFiltering, Dierckx, ImageQualityIndexes, Adapt
 using ..AbstractLinearOperators
 
 const RealOrComplex{T<:Real} = Union{T,Complex{T}}

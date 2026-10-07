@@ -105,7 +105,7 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         options.verbose && (@info string("Iter [", n, "/", options.niter, "], fval = ", fval_n))
 
         # Compute gradient
-        g = Jθ'*A'*r
+        g = Array(Jθ'*A'*r) # motion parameters (and the sparse Gauss-Newton system) live on the CPU
         interp_flag && (g = reshape(Ip'*vec(g), :, 6))
         # reg_flag && (g .+= options.λ^2*reshape(D'*vec(Dθ), :, 6)) 
 

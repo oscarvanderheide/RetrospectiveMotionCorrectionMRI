@@ -62,10 +62,10 @@ function image_reconstruction(F::AbstractLinearOperator{CT,3,CT,2}, d::AbstractA
         # Least squares via normal equations, F'F evaluated by Toeplitz embedding
         FtF = toeplitz_normal_operator(F)
         misfit = normal_equations_misfit(FtF, F'*d, norm(d)^2)
-        ~isnothing(options.niter_estimate_Lipschitz) && (L = T(1.1)*spectral_radius(FtF; niter=options.niter_estimate_Lipschitz))
+        ~isnothing(options.niter_estimate_Lipschitz) && (L = T(1.1)*spectral_radius(FtF; x=on_device_of(initial_estimate, randn(CT, size(initial_estimate))), niter=options.niter_estimate_Lipschitz))
     else
         misfit = leastsquares_misfit(F, d)
-        ~isnothing(options.niter_estimate_Lipschitz) && (L = T(1.1)*spectral_radius(F*F'; niter=options.niter_estimate_Lipschitz))
+        ~isnothing(options.niter_estimate_Lipschitz) && (L = T(1.1)*spectral_radius(F*F'; x=on_device_of(d, randn(CT, size(d))), niter=options.niter_estimate_Lipschitz))
     end
     opt_FISTA = isnothing(options.niter_estimate_Lipschitz) ? options.options : set_Lipschitz_constant(options.options, L)
     return argmin!(misfit+options.prox, initial_estimate, opt_FISTA, similar(initial_estimate))

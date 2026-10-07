@@ -59,7 +59,7 @@ AbstractLinearOperators.domain_size(R::RotationLinOp) = (size(R.R,1), "nk", 3)
 AbstractLinearOperators.range_size(R::RotationLinOp) = domain_size(R)
 
 function AbstractLinearOperators.matvecprod(R::RotationLinOp{T}, K::AbstractArray{T,3}) where {T<:Real}
-    K_rot = zeros(T, size(K))
+    K_rot = fill!(similar(K), 0)
     @inbounds for i = 1:3, j=1:3
         K_rot[:,:,i] .+= R.R[:,i,j].*K[:,:,j]
     end
@@ -69,7 +69,7 @@ function AbstractLinearOperators.matvecprod(R::RotationLinOp{T}, K::AbstractArra
 end
 
 function AbstractLinearOperators.matvecprod_adj(R::RotationLinOp{T}, K::AbstractArray{T,3}) where {T<:Real}
-    K_rot_adj = zeros(T, size(K))
+    K_rot_adj = fill!(similar(K), 0)
     @inbounds for i = 1:3, j=1:3
         K_rot_adj[:,:,i] .+= R.R[:,j,i].*K[:,:,j]
     end
