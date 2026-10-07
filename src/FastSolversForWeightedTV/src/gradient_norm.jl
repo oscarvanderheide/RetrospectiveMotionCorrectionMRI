@@ -17,11 +17,11 @@ The mixed norm is specified by `p1` and `p2`. For `p1=2`, `p2=1`, and `weight=no
 
 The Cartesian grid geometry is determined by the grid size `n` and spacing `h`. For instance, in 3D, `n=(64, 128, 256)`, `h=(1f0, 2f0, 3f0)`.
 
-The linear operator ``A`` is specified via the keyword `weight`. Note that this weight must be initialized via the tools contained in the package `AbstractLinearOperators` (see Section [Getting started](@ref) for an example).
+The linear operator ``A`` is specified via the keyword `weight`. Note that this weight must be initialized via the tools contained in the package `AbstractLinearOperators` (see Section [Getting started](@ref examples) for an example).
 
 Complex or real inputs are handled via the keyword `complex`. Set `complex=true` for complex image input.
 
-For the evaluation of the associated proximal operator, one must specify a solver with the keyword `options`. Dedicated solvers are offered by the package `AbstractProximableFunctions.jl` (e.g. FISTA, see Section [Getting started](@ref) for some basic usage options).
+For the evaluation of the associated proximal operator, one must specify a solver with the keyword `options`. Dedicated solvers are offered by the package `AbstractProximableFunctions.jl` (e.g. FISTA, see Section [Getting started](@ref examples) for some basic usage options).
 
 With `warmstart=true`, the (iterative) projection on the sublevel set ``\\{g\\le\\varepsilon\\}`` is initialized with the dual solution of the previous projection, rather than with zero. Since the inner FISTA solver is typically run for a small fixed number of iterations, this generally yields more accurate projections (allowing fewer inner iterations), but it also makes the result depend on the history of previous calls. Use [`reset_warmstart!`](@ref) to discard the stored solution. Only supported for 3D CPU arrays with `weight=nothing` or a `ProjVectorField` weight (ignored otherwise).
 """

@@ -13,7 +13,7 @@ motion_correction_options(; image_reconstruction_options::ImageReconstructionOpt
 ## Image reconstruction
 
 ```@docs
-image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, options::RetrospectiveMotionCorrectionMRI.ImageReconstructionOptionsFISTA) where {T<:Real,CT<:RealOrComplex{T}}
+image_reconstruction(F::AbstractLinearOperator{CT,3,CT,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, options::RetrospectiveMotionCorrectionMRI.ImageReconstructionOptionsFISTA) where {T<:Real,CT<:RealOrComplex{T}}
 ```
 
 ```@docs
@@ -53,3 +53,12 @@ rigid_registration(u_moving::AbstractArray{CT,3}, u_fixed::AbstractArray{CT,3}, 
 ```@docs
 rigid_registration_options(; niter::Integer=10, verbose::Bool=false, fun_history::Bool=false)
 ```
+## Performance and GPU utilities
+
+```@docs
+gradient_norm
+reset_warmstart!
+toeplitz_normal_operator
+```
+
+For GPU usage (CUDA), see the README.

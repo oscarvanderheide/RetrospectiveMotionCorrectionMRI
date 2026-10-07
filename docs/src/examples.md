@@ -2,14 +2,14 @@
 
 In this section, we present a brief step-by-step tutorial on how to perform motion correction for MRI using the tools provided by `RetrospectiveMotionCorrectionMRI`.
 
-Make sure to have installed the package `RetrospectiveMotionCorrectionMRI` and its dependency by following the instructions highlighted [here](@ref install). For plotting, we are also going to make use of `PyPlot`, to install it press `]` in the Julia REPL and type:
+Make sure to have installed the package `RetrospectiveMotionCorrectionMRI` and its dependency by following the instructions highlighted [here](@ref install). For plotting, we are also going to make use of `PythonPlot`, to install it press `]` in the Julia REPL and type:
 ```julia
-(@v1.8) pkg> add PyPlot
+pkg> add PythonPlot
 ```
 
 Let's start by loading all the needed modules:
 ```julia
-using RetrospectiveMotionCorrectionMRI, FastSolversForWeightedTV, UtilitiesForMRI, AbstractProximableFunctions, LinearAlgebra, PyPlot
+using RetrospectiveMotionCorrectionMRI, LinearAlgebra, PythonPlot
 ```
 
 We can define a simple spatial discretization `X` and ``k``-space trajectory `K` (in this case, corresponding to Cartesian dense sampling). The associated Fourier transform will be `F`:
