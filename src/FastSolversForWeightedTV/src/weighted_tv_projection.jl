@@ -145,7 +145,11 @@ function sum_count_above(a::Array{T}, λ::T) where {T<:Real}
     return sum(sums), sum(counts)
 end
 
-sum_count_above(a::AbstractArray{T}, λ::T) where {T<:Real} = (Float64(sum(x -> ifelse(x > λ, x, zero(x)), a)), count(>(λ), a))
+# (single reduction, i.e. one device synchronization per Michelot step on GPUs)
+function sum_count_above(a::AbstractArray{T}, λ::T) where {T<:Real}
+    s, c = mapreduce(x -> ifelse(x > λ, (x, 1), (zero(T), 0)), (v, w) -> (v[1]+w[1], v[2]+w[2]), a; init=(zero(T), 0))
+    return Float64(s), c
+end
 
 # Elementwise map (threaded for CPU arrays)
 tmap!(f, out::AbstractArray, args::AbstractArray...) = (out .= f.(args...))
