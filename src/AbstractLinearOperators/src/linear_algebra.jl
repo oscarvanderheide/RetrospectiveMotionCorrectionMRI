@@ -112,6 +112,7 @@ struct ScaledLinearOperator{TD,ND,TR,NR}<:AbstractLinearOperator{TD,ND,TR,NR}
 end
 
 Base.:*(c::TR, A::AbstractLinearOperator{TD,ND,TR,NR}) where {TD,ND,TR,NR} = ScaledLinearOperator{TD,ND,TR,NR}(c, A)
+Base.:*(c::Real, A::AbstractLinearOperator{TD,ND,TR,NR}) where {TD,ND,TR<:Complex,NR} = convert(TR, c)*A # e.g. real step length times complex operator
 
 domain_size(A::ScaledLinearOperator) = domain_size(A.A)
 range_size(A::ScaledLinearOperator) = range_size(A.A)
