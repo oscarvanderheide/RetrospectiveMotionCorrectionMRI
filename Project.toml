@@ -18,7 +18,16 @@ Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
 
+[weakdeps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+NonuniformFFTs = "cd96f58b-6017-4a02-bb9e-f4d81626177f"
+
+[extensions]
+RetrospectiveMotionCorrectionMRICUDAExt = ["CUDA", "NonuniformFFTs"]
+
 [compat]
+CUDA = "5"
+NonuniformFFTs = "0.9"
 Adapt = "4"
 Dierckx = "0.5.4"
 FFTW = "1.10.0"
@@ -33,8 +42,10 @@ cuDNN = "1.4.6"
 julia = "1.12"
 
 [extras]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+NonuniformFFTs = "cd96f58b-6017-4a02-bb9e-f4d81626177f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Random"]
+test = ["Test", "Random", "CUDA", "NonuniformFFTs"]
