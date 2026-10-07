@@ -1,4 +1,4 @@
-using LinearAlgebra, AbstractProximableFunctions, AbstractLinearOperators, Test, Random
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI.AbstractProximableFunctions, RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, Test, Random
 Random.seed!(123)
 
 # Random input
@@ -12,7 +12,7 @@ function bw(y)
     x[1:2:end,1:2:end] .= y
     return x
 end
-A = linear_operator(T, n, (512, 1024), fw, bw)
+A = linear_operator(T, n, T, (512, 1024), fw, bw)
 
 # Misfit
 y = randn(T, 512, 1024)

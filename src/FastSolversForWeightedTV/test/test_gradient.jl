@@ -1,4 +1,4 @@
-using LinearAlgebra, CUDA, FastSolversForWeightedTV, Test, Random
+using LinearAlgebra, CUDA, RetrospectiveMotionCorrectionMRI.FastSolversForWeightedTV, Test, Random
 Random.seed!(123)
 CUDA.allowscalar(false)
 
@@ -13,7 +13,7 @@ for dim = 1:3, flag_gpu = [false], is_complex = [true, false]
     # Operator
     n = tuple(repeat([n1d,]; outer=dim)...)
     h = tuple(abs.(randn(T, dim))...)
-    ∇ = gradient_operator(n, h; complex=is_complex)
+    ∇ = RetrospectiveMotionCorrectionMRI.FastSolversForWeightedTV.gradient_operator(n, h; complex=is_complex) # (name also exported by AbstractLinearOperators)
 
     # Adjoint test
     CT = is_complex ? Complex{T} : T

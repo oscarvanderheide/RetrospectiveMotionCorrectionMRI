@@ -1,4 +1,4 @@
-using AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
+using RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
 CUDA.allowscalar(false)
 Random.seed!(42)
 

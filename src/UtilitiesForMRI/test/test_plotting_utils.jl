@@ -1,4 +1,4 @@
-using UtilitiesForMRI
+using RetrospectiveMotionCorrectionMRI.UtilitiesForMRI
 
 # Cartesian domain
 n = (4, 4, 4)

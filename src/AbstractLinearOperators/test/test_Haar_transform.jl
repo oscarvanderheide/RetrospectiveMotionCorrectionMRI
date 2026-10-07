@@ -1,4 +1,4 @@
-using AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
+using RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
 CUDA.allowscalar(false)
 Random.seed!(42)
 
@@ -8,7 +8,7 @@ nb = 4
 rtol = T(1e-6)
 
 println("Test Haar transform")
-for D = 1:3, orthogonal = [true, false], batch = [false, true], device = [:cpu, :gpu]
+for D = 1:3, orthogonal = [true, false], batch = [false, true], device = (RUN_GPU_TESTS ? [:cpu, :gpu] : [:cpu])
     println("D=", D, "; orthogonal=", orthogonal, "; batch=", batch, "; device=", device)
 
     # Linear operator

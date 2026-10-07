@@ -1,4 +1,4 @@
-using LinearAlgebra, AbstractProximableFunctions, Test, AbstractLinearOperators, Random
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI.AbstractProximableFunctions, Test, RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, Random
 Random.seed!(123)
 
 # Random data
@@ -15,7 +15,7 @@ for dim = 1:3
     δ = indicator(C)
     y = randn(T, sz...)
     v = randn(T, sz..., dim)
-    A = linear_operator(T, sz, (sz...,dim), x->v.*x, y->dropdims(sum(conj(v).*y; dims=dim+1); dims=dim+1))
+    A = linear_operator(T, sz, T, (sz...,dim), x->v.*x, y->dropdims(sum(conj(v).*y; dims=dim+1); dims=dim+1))
     ρ = 1.01*spectral_radius(A*A'; niter=200)
     opt = FISTA_options(ρ; Nesterov=true, niter=400, reset_counter=20, verbose=false, fun_history=false)
 

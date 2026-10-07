@@ -1,4 +1,4 @@
-using UtilitiesForMRI, Random, Test
+using RetrospectiveMotionCorrectionMRI.UtilitiesForMRI, Random, Test
 Random.seed!(123)
 
 # k-space

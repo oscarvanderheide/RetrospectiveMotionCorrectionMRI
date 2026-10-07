@@ -1,4 +1,4 @@
-using AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
+using RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
 CUDA.allowscalar(false)
 Random.seed!(42)
 
@@ -11,7 +11,7 @@ nb = 4
 rtol = T(1e-6)
 
 println("Testing convolutional operators")
-for D = 1:3, device = [:cpu, :gpu], complex = [true, false]
+for D = 1:3, device = (RUN_GPU_TESTS ? [:cpu, :gpu] : [:cpu]), complex = [true, false]
     println("D=", D, "; device=", device, "; complex=", complex)
 
     # Linear operator

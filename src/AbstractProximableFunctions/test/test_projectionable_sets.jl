@@ -1,4 +1,4 @@
-using LinearAlgebra, AbstractProximableFunctions, AbstractLinearOperators, Test, Random
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI.AbstractProximableFunctions, RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, Test, Random
 Random.seed!(123)
 
 # Random input

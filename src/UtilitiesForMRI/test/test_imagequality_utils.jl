@@ -1,4 +1,4 @@
-using UtilitiesForMRI, LinearAlgebra
+using RetrospectiveMotionCorrectionMRI.UtilitiesForMRI, LinearAlgebra
 
 # Setting noisy data
 n = (256, 256, 256)

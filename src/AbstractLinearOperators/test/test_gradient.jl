@@ -1,4 +1,4 @@
-using AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
+using RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
 CUDA.allowscalar(false)
 Random.seed!(42)
 
@@ -8,7 +8,7 @@ rtol = T(1e-6)
 nb = 2
 
 println("Testing gradient operator")
-for D = 1:3, batch = [false, true], device = [:cpu, :gpu], complex = [true, false]
+for D = 1:3, batch = [false, true], device = (RUN_GPU_TESTS ? [:cpu, :gpu] : [:cpu]), complex = [true, false]
     println("D=", D, "; batch=", batch, "; device=", device, "; complex=", complex)
 
     # Gradient operator

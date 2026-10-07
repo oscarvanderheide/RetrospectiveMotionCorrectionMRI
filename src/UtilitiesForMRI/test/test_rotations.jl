@@ -1,4 +1,4 @@
-using UtilitiesForMRI, LinearAlgebra, Test, Random
+using RetrospectiveMotionCorrectionMRI.UtilitiesForMRI, LinearAlgebra, Test, Random
 
 # Cartesian domain
 n = (256, 257, 256)

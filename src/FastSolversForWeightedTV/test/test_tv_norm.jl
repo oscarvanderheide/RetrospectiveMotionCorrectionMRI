@@ -1,4 +1,4 @@
-using LinearAlgebra, FastSolversForWeightedTV, AbstractProximableFunctions, CUDA, Test, Random
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI.FastSolversForWeightedTV, RetrospectiveMotionCorrectionMRI.AbstractProximableFunctions, CUDA, Test, Random
 Random.seed!(123)
 CUDA.allowscalar(false)
 
@@ -36,7 +36,10 @@ for dim = 1:3, flag_gpu = [false], is_complex = [true, false]
     @test (g(x) ≤ ε) || isapprox(g(x), ε; rtol=rtol)
 
     # Gradient test (projection)
-    fun = proj_objfun(g, ε; options=opt)
+    # (the finite-difference check is only as accurate as the inner FISTA solve of the projection,
+    # hence more iterations than above)
+    opt_accurate = FISTA_options(T(4*dim); Nesterov=true, niter=5*niter, reset_counter=20, verbose=false)
+    fun = proj_objfun(g, ε; options=opt_accurate)
     @test test_grad(fun, y; step=step, rtol=rtol)
 
 end

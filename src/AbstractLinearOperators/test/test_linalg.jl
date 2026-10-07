@@ -1,11 +1,11 @@
-using AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
+using RetrospectiveMotionCorrectionMRI.AbstractLinearOperators, LinearAlgebra, CUDA, Test, Random
 CUDA.allowscalar(false)
 Random.seed!(42)
 
 # Custom-type module
 module ModuleCustomType
-    using AbstractLinearOperators
-    import AbstractLinearOperators: domain_size, range_size, matvecprod, matvecprod_adj, invmatvecprod, invmatvecprod_adj
+    using RetrospectiveMotionCorrectionMRI.AbstractLinearOperators
+    import RetrospectiveMotionCorrectionMRI.AbstractLinearOperators: domain_size, range_size, matvecprod, matvecprod_adj, invmatvecprod, invmatvecprod_adj
 
     export CustomType
 
@@ -106,3 +106,8 @@ C = α*A
 @test C*u ≈ α*(A*u) rtol=rtol
 @test adjoint_test(C; rtol=rtol)
 @test inverse_test(C; rtol=rtol)
+
+# Real scalar times complex operator
+Acomplex = linear_operator(ComplexF64, (3,), ComplexF64, (3,), x -> 2 .*x, y -> 2 .*y)
+uc = randn(ComplexF64, 3)
+@test (0.5*Acomplex)*uc ≈ uc rtol=rtol

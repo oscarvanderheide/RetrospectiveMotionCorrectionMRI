@@ -1,4 +1,4 @@
-using UtilitiesForMRI, LinearAlgebra, Test, Random, AbstractLinearOperators, Random
+using RetrospectiveMotionCorrectionMRI.UtilitiesForMRI, LinearAlgebra, Test, Random, RetrospectiveMotionCorrectionMRI.AbstractLinearOperators
 Random.seed!(123)
 
 # Cartesian domain
@@ -62,9 +62,9 @@ Fθu_m1 = F(θ-0.5*t*Δθ)*u
 
 # Gauss-Newton Hessian
 w = randn(ComplexF64, size(ΔF))
-W = linear_operator(ComplexF64, size(ΔF), size(ΔF), d->w.*d, d-> conj(w).*d)
+W = linear_operator(ComplexF64, size(ΔF), ComplexF64, size(ΔF), d->w.*d, d-> conj(w).*d)
 h = randn(ComplexF64, size(ΔF))
-H = linear_operator(ComplexF64, size(ΔF), size(ΔF), d->h.*d, d-> conj(h).*d)
+H = linear_operator(ComplexF64, size(ΔF), ComplexF64, size(ΔF), d->h.*d, d-> conj(h).*d)
 HF = sparse_matrix_GaussNewton(∂Fθu; W=W, H=H)
 
 # Consistency test

@@ -1,4 +1,4 @@
-using UtilitiesForMRI, LinearAlgebra, Test, Random
+using RetrospectiveMotionCorrectionMRI.UtilitiesForMRI, LinearAlgebra, Test, Random
 Random.seed!(123)
 
 nt = 256

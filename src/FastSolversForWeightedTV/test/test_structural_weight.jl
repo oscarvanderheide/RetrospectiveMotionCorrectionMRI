@@ -1,4 +1,4 @@
-using LinearAlgebra, CUDA, FastSolversForWeightedTV, Test, Random
+using LinearAlgebra, CUDA, RetrospectiveMotionCorrectionMRI.FastSolversForWeightedTV, Test, Random
 Random.seed!(123)
 CUDA.allowscalar(false)
 
