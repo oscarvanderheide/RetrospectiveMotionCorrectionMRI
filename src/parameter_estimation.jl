@@ -75,7 +75,7 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
     θ = deepcopy(initial_estimate)
     interp_flag = ~isnothing(options.interp_matrix); interp_flag && (Ip = options.interp_matrix)
     reg_flag    = ~isnothing(options.reg_matrix) && (options.λ != T(0)); reg_flag && (D = options.reg_matrix)
-
+    
     # Iterative solution
     @inbounds for n = 1:options.niter
 
@@ -95,7 +95,8 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
 
         # Regularization term
         if reg_flag
-            Dθ = reshape(D*vec(θ), :, 6)
+            Dθ = reshape(D*vec(θ), :, 6) # i changed θ  to Iθ (because Iθ = size of D and θ is motion on before interpolation (so 64)), 
+                                         #if this doesnt work we can try to generate the D matrix based on ti instead of t
             (~isnothing(options.fun_history) || options.verbose) && (fval_n += T(0.5)*options.λ^2*norm(Dθ)^2)
         end
 
@@ -106,12 +107,17 @@ function parameter_estimation(F::StructuredNFFTtype2LinOp{T}, u::AbstractArray{C
         # Compute gradient
         g = Jθ'*A'*r
         interp_flag && (g = reshape(Ip'*vec(g), :, 6))
-        reg_flag && (g .+= options.λ^2*reshape(D'*vec(Dθ), :, 6))
+        # reg_flag && (g .+= options.λ^2*reshape(D'*vec(Dθ), :, 6)) 
 
+        reg_flag && (g .+= options.λ^2*reshape(D'*vec(Dθ), :, 6)) 
         # Hessian
         H = sparse_matrix_GaussNewton(Jθ; W=A)
         interp_flag && (H = Ip'*H*Ip)
         reg_flag && (H .+= options.λ^2*(D'*D))
+        # @info options.λ^2 * (D' * D)
+        # @info "********************"
+        # @info options.λ^2*reshape(D'*vec(Dθ), :, 6)
+        # @info "********************"
 
         # Marquardt-Levenberg regularization
         if ~isnothing(options.reg_Hessian)

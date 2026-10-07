@@ -1,4 +1,4 @@
-using LinearAlgebra, RetrospectiveMotionCorrectionMRI, AbstractProximableFunctions, FastSolversForWeightedTV, UtilitiesForMRI, PythonPlot, JLD
+using LinearAlgebra, RetrospectiveMotionCorrectionMRI, PythonPlot, JLD
 
 # Load data
 results_folder = string(pwd(), "/paper/baseline/")

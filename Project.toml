@@ -1,26 +1,34 @@
 name = "RetrospectiveMotionCorrectionMRI"
 uuid = "24772341-69a6-4cfa-a9d8-04aed0acc5f5"
-authors = ["Gabrio Rizzuti <rizzuti.gabrio@gmail.com>"]
 version = "1.0.0"
+authors = ["Gabrio Rizzuti <rizzuti.gabrio@gmail.com>"]
 
 [deps]
-AbstractLinearOperators = "bb902dec-a34b-4f3c-9707-4856bea60ee0"
-AbstractProximableFunctions = "9ed10759-246d-4065-822b-90d32585fe69"
-FastSolversForWeightedTV = "3521e485-16e8-49c3-934a-dec609b578e8"
+Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+FINUFFT = "d8beea63-0952-562e-9c6a-8e8ef7364055"
+ImageFiltering = "6a3955dd-da59-5b1f-98d4-e7296123deb5"
+ImageQualityIndexes = "2996bd0c-7a13-11e9-2da2-2f5ce47296a9"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NNlib = "872c559c-99b0-510c-b3b7-b6c96a88d5cd"
 PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-UtilitiesForMRI = "5f442635-cb9d-4e13-b358-1c870cfef0cf"
-
-[sources]
-AbstractLinearOperators = {rev = "oscar/v1-to-julia-v1.11", url = "https://github.com/oscarvanderheide/AbstractLinearOperators.jl"}
-AbstractProximableFunctions = {url = "https://github.com/oscarvanderheide/AbstractProximableFunctions"}
-FastSolversForWeightedTV = {url = "https://github.com/oscarvanderheide/FastSolversForWeightedTV"}
-UtilitiesForMRI = {url = "https://github.com/oscarvanderheide/UtilitiesForMRI"}
+cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
 
 [compat]
+Dierckx = "0.5.4"
+FFTW = "1.10.0"
+FINUFFT = "3.4.2"
+ImageFiltering = "0.7.12"
+ImageQualityIndexes = "0.3.7"
+NNlib = "0.9.33"
 PythonPlot = "1.0.6"
-julia = "1.11"
+Reexport = "1.2.2"
+Roots = "2.2.10"
+cuDNN = "1.4.6"
+julia = "1.12"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"

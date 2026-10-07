@@ -8,6 +8,7 @@ export IdentityOperator, identity_operator,
 struct IdentityOperator{T,N}<:AbstractAutoLinearOperator{T,N} end
 
 identity_operator(T::DataType, N::Integer) = IdentityOperator{T,N}()
+identity_operator(T::DataType, size::NTuple{N,Integer}) where N = IdentityOperator{T,N}()
 
 label(::IdentityOperator) = "Id"
 matvecprod(::IdentityOperator{T,N}, u::AbstractArray{T,N}) where {T,N} = u

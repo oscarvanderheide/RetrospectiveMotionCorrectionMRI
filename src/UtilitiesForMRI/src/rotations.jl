@@ -6,7 +6,7 @@ export rotation_linop, rotation, Jacobian, ∂
 
 ## Linear operator
 
-struct RotationLinOp{T<:Real}<:AbstractLinearOperator{T,3,3}
+struct RotationLinOp{T<:Real}<:AbstractLinearOperator{T,3,T,3}
     R::AbstractArray{T,3}
     c::Union{Nothing,AbstractArray{T,2}}
     s::Union{Nothing,AbstractArray{T,2}}
@@ -103,7 +103,7 @@ Base.:*(::RotationParametericLinOp, K::AbstractArray{T,3}) where {T<:Real} =  Ro
 
 ## Jacobian of rotation evaluated
 
-struct JacobianRotation{T<:Real}<:AbstractLinearOperator{T,2,3}
+struct JacobianRotation{T<:Real}<:AbstractLinearOperator{T,2,T,3}
     RK::RotationParametericDelayedEval{T}
     ∂R::AbstractArray{T,4}
 end
@@ -135,7 +135,7 @@ function AbstractLinearOperators.matvecprod_adj(∂RK::JacobianRotation{T}, ΔRK
     end
     return Δφ
     # nt, nk, _ = size(ΔRK)
-    # KΔRK = sum(ΔRK.*reshape(∂RK.K, nt, nk, 1, 3); dims=2)[:,1,:,:] 
+    # KΔRK = sum(ΔRK.*reshape(∂RK.K, nt, nk, 1, 3); dims=2)[:,1,:,:]
     # return sum(∂RK.∂R.*reshape(KΔRK, nt, 3, 3, 1); dims=2:3)[:,1,1,:]
 end
 

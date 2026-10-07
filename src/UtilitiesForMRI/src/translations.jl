@@ -6,7 +6,7 @@ export phase_shift_linop, phase_shift, Jacobian, ∂
 
 ## Linear operator
 
-struct PhaseShiftLinOp{T<:Real}<:AbstractLinearOperator{Complex{T},2,2}
+struct PhaseShiftLinOp{T<:Real}<:AbstractLinearOperator{Complex{T},2,Complex{T},2}
     phase_shift::AbstractArray{Complex{T},2}
 end
 
@@ -49,7 +49,7 @@ Base.:*(P::PhaseShiftParametericLinOp{T}, d::AbstractArray{Complex{T},2}) where 
 
 ## Jacobian of phase-shift evaluated
 
-struct JacobianPhaseShift{T<:Real}<:AbstractLinearOperator{Complex{T},2,2}
+struct JacobianPhaseShift{T<:Real}<:AbstractLinearOperator{Complex{T},2,Complex{T},2}
     ∂P::AbstractArray{Complex{T},3}
 end
 

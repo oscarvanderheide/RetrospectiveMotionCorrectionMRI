@@ -5,7 +5,7 @@ export gradient_operator, gradient_eval
 
 # Generic convolutional operator
 
-mutable struct ConvolutionalOperator{T,N}<:AbstractLinearOperator{T,N,N}
+mutable struct ConvolutionalOperator{T,N}<:AbstractLinearOperator{T,N,T,N}
     cdims::DenseConvDims
     stencil::AbstractArray
     init_flag::Bool

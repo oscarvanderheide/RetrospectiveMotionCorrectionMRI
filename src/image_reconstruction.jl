@@ -52,7 +52,7 @@ Performs image reconstruction by fitting the data `d` through a linear operator 
 
 See this [section](@ref imrecon) for more details on the solution algorithm.
 """
-function image_reconstruction(F::AbstractLinearOperator{CT,3,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, options::ImageReconstructionOptionsFISTA) where {T<:Real,CT<:RealOrComplex{T}}
+function image_reconstruction(F::AbstractLinearOperator{CT,3,CT,2}, d::AbstractArray{CT,2}, initial_estimate::AbstractArray{CT,3}, options::ImageReconstructionOptionsFISTA) where {T<:Real,CT<:RealOrComplex{T}}
     if ~isnothing(options.niter_estimate_Lipschitz)
         L = T(1.1)*spectral_radius(F*F'; niter=options.niter_estimate_Lipschitz)
         opt_FISTA = set_Lipschitz_constant(options.options, L)

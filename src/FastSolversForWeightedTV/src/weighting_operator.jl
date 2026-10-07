@@ -5,7 +5,7 @@ export ProjVectorField, structural_weight, structural_mean, structural_maximum
 
 # Projection on vector field
 
-struct ProjVectorField{T,N}<:AbstractLinearOperator{T,N,N}
+struct ProjVectorField{T,N}<:AbstractLinearOperator{T,N,T,N}
     ξ::AbstractArray{T,N}
     γ::T
 end

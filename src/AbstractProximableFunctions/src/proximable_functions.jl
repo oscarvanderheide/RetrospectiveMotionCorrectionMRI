@@ -37,12 +37,12 @@ options(δ::IndicatorFunction) = options(δ.set)
 
 struct WeightedProximableFunction{T,N,M}<:AbstractProximableFunction{T,N}
     prox::AbstractProximableFunction{T,M}
-    linear_operator::AbstractLinearOperator{T,N,M}
+    linear_operator::AbstractLinearOperator{T,N,T,M}
     options::AbstractArgminOptions
 end
 
-weighted_prox(g::AbstractProximableFunction{T,M}, A::AbstractLinearOperator{T,N,M}; options::AbstractArgminOptions=exact_argmin()) where {T,N,M} = WeightedProximableFunction{T,N,M}(g, A, options)
-Base.:∘(g::AbstractProximableFunction{T,M}, A::AbstractLinearOperator{T,N,M}; options::AbstractArgminOptions=exact_argmin()) where {T,N,M} = weighted_prox(g, A; options=options)
+weighted_prox(g::AbstractProximableFunction{T,M}, A::AbstractLinearOperator{T,N,T,M}; options::AbstractArgminOptions=exact_argmin()) where {T,N,M} = WeightedProximableFunction{T,N,M}(g, A, options)
+Base.:∘(g::AbstractProximableFunction{T,M}, A::AbstractLinearOperator{T,N,T,M}; options::AbstractArgminOptions=exact_argmin()) where {T,N,M} = weighted_prox(g, A; options=options)
 options(g::WeightedProximableFunction) = g.options
 
 funeval(g::WeightedProximableFunction{T,N}, x::AbstractArray{T,N}) where {T,N} = g.prox(g.linear_operator*x)
@@ -199,13 +199,13 @@ Base.:+(δ::IndicatorFunction{T,N}, g::WeightedProximableFunction{T,N}; options:
 funeval(g::WeightedProxPlusIndicator{T,N}, x::AbstractArray{T,N}) where {T,N} = g.wprox(x)+g.indicator(x)
 
 struct _WeightedProxPlusIndicatorProxObj{T,N1,N2}<:AbstractDifferentiableFunction{T,N2}
-    linear_operator::AbstractLinearOperator{T,N1,N2}
+    linear_operator::AbstractLinearOperator{T,N1,T,N2}
     y::AbstractArray{T,N1}
     λ::Real
     set::AbstractProjectionableSet{T,N1}
 end
 
-_wprox_plus_indicator_proxobj(A::AbstractLinearOperator{CT,N1,N2}, y::AbstractArray{CT,N1}, λ::T, C::AbstractProjectionableSet{CT,N1}) where {T<:Real,N1,N2,CT<:RealOrComplex{T}} = _WeightedProxPlusIndicatorProxObj{CT,N1,N2}(A, y, λ, C)
+_wprox_plus_indicator_proxobj(A::AbstractLinearOperator{CT,N1,CT,N2}, y::AbstractArray{CT,N1}, λ::T, C::AbstractProjectionableSet{CT,N1}) where {T<:Real,N1,N2,CT<:RealOrComplex{T}} = _WeightedProxPlusIndicatorProxObj{CT,N1,N2}(A, y, λ, C)
 
 function funeval(f::_WeightedProxPlusIndicatorProxObj{CT,N1,N2}, p::AbstractArray{CT,N2}) where {T<:Real,CT<:RealOrComplex{T},N1,N2}
     r = f.y-f.λ*f.linear_operator'*p

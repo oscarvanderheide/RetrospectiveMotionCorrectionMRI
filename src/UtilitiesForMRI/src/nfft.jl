@@ -91,7 +91,7 @@ Base.:*(F::ParametericStructuredNFFTtype2{T}, u::AbstractArray{Complex{T},3}) wh
 
 ## Jacobian of nfft evaluated
 
-struct JacobianStructuredNFFTtype2{T<:Real}<:AbstractLinearOperator{Complex{T},2,2}
+struct JacobianStructuredNFFTtype2{T<:Real}<:AbstractLinearOperator{Complex{T},2,Complex{T},2}
     ∂F::AbstractArray{Complex{T},3}
 end
 

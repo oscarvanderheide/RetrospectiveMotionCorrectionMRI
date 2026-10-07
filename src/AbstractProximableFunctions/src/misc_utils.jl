@@ -5,7 +5,7 @@ export test_grad
 export set_options
 
 
-function spectral_radius(A::Union{AbstractMatrix{T},AbstractLinearOperator{T,N,N}}; x::Union{Nothing,AbstractArray{T,N}}=nothing, niter::Int64=10) where {T,N}
+function spectral_radius(A::Union{AbstractMatrix{T},AbstractLinearOperator{T,N,T,N}}; x::Union{Nothing,AbstractArray{T,N}}=nothing, niter::Int64=10) where {T,N}
     if isnothing(x)
         A isa AbstractMatrix && (x = randn(T, size(A,2)))
         A isa AbstractLinearOperator && (x = randn(T, domain_size(A)))
