@@ -16,14 +16,14 @@ PythonPlot = "274fc56d-3b97-40fa-a1cd-1b4a50311bf9"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
 
 [weakdeps]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 NonuniformFFTs = "cd96f58b-6017-4a02-bb9e-f4d81626177f"
+cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
 
 [extensions]
-RetrospectiveMotionCorrectionMRICUDAExt = ["CUDA", "NonuniformFFTs"]
+RetrospectiveMotionCorrectionMRICUDAExt = ["CUDA", "NonuniformFFTs", "cuDNN"]
 
 [compat]
 CUDA = "5"
@@ -46,6 +46,7 @@ CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 NonuniformFFTs = "cd96f58b-6017-4a02-bb9e-f4d81626177f"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
 
 [targets]
-test = ["Test", "Random", "CUDA", "NonuniformFFTs"]
+test = ["Test", "Random", "CUDA", "NonuniformFFTs", "cuDNN"]

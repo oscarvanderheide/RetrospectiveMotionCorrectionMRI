@@ -6,10 +6,10 @@ using StatsBase
 import PythonPlot as pp
 using MAT, Statistics
 
-# Run on an NVIDIA GPU? Requires CUDA.jl and NonuniformFFTs.jl in the script environment
-# (] add CUDA NonuniformFFTs). Results agree with the CPU up to the NUFFT accuracy.
+# Run on an NVIDIA GPU? Requires CUDA.jl, cuDNN.jl and NonuniformFFTs.jl in the script environment
+# (] add CUDA cuDNN NonuniformFFTs). Results agree with the CPU up to the NUFFT accuracy.
 const use_gpu = false
-use_gpu && @eval using CUDA, NonuniformFFTs
+use_gpu && @eval using CUDA, cuDNN, NonuniformFFTs
 to_gpu(x::AbstractArray) = use_gpu ? CUDA.CuArray(x) : x # images and data
 to_gpu(F) = use_gpu ? CUDA.cu(F) : F                       # NUFFT operator
 to_cpu(x) = Array(x)

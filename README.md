@@ -32,10 +32,10 @@ CPU code is multithreaded: start Julia with e.g. `julia -t 8`.
 
 ### GPU
 
-GPU support (NVIDIA, CUDA) is provided through a package extension that is loaded when [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) and [NonuniformFFTs.jl](https://github.com/jipolanco/NonuniformFFTs.jl) are loaded. Move the NUFFT operator, data, reference image and initial image to the GPU; motion parameters stay on the CPU:
+GPU support (NVIDIA, CUDA) is provided through a package extension that is loaded when [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl), [cuDNN.jl](https://github.com/JuliaGPU/CUDA.jl/tree/master/lib/cudnn) and [NonuniformFFTs.jl](https://github.com/jipolanco/NonuniformFFTs.jl) are loaded (`] add CUDA cuDNN NonuniformFFTs`). CPU-only installs do not need any of these. Move the NUFFT operator, data, reference image and initial image to the GPU; motion parameters stay on the CPU:
 
 ```julia
-using CUDA, NonuniformFFTs, RetrospectiveMotionCorrectionMRI
+using CUDA, cuDNN, NonuniformFFTs, RetrospectiveMotionCorrectionMRI
 
 F = cu(nfft_linop(X, K; tol=1f-4))
 d = cu(d); reference = cu(reference); u0 = cu(u0)

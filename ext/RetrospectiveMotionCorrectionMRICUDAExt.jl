@@ -1,9 +1,9 @@
-# GPU support (CUDA), loaded when both CUDA.jl and NonuniformFFTs.jl are loaded.
+# GPU support (CUDA), loaded when CUDA.jl, cuDNN.jl (GPU convolutions via NNlib) and NonuniformFFTs.jl are loaded.
 #
 # Usage: move the NUFFT operator, data, initial image and reference image to the GPU with `cu`;
 # motion parameters stay on the CPU:
 #
-#   using CUDA, NonuniformFFTs, RetrospectiveMotionCorrectionMRI
+#   using CUDA, cuDNN, NonuniformFFTs, RetrospectiveMotionCorrectionMRI
 #   F = cu(nfft_linop(X, K; tol=1f-4)); d = cu(d); u0 = cu(u0); ref = cu(ref)
 
 module RetrospectiveMotionCorrectionMRICUDAExt
